@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS checklists (
     technician_name VARCHAR(100) NOT NULL,
     van_name VARCHAR(100) NOT NULL,
     checklist_date DATE NOT NULL,
+    checklist_type ENUM('Daily', 'Weekly') NOT NULL DEFAULT 'Daily',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -17,4 +18,19 @@ CREATE TABLE IF NOT EXISTS checklist_items (
     item_type ENUM('Tool', 'Part') NOT NULL,
     is_checked TINYINT(1) NOT NULL DEFAULT 0,
     FOREIGN KEY (checklist_id) REFERENCES checklists(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS technicians (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS vans (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS parts_library (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL UNIQUE
 );

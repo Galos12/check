@@ -1,12 +1,59 @@
 const itemsContainer = document.getElementById('items-container');
 const addItemButton = document.getElementById('add-item-btn');
+const addFullToolListButton = document.getElementById('add-full-tool-list-btn');
 const newItemName = document.getElementById('new_item_name');
 const newItemType = document.getElementById('new_item_type');
 const checklistDateDisplay = document.getElementById('checklist_date_display');
 const checklistDateInput = document.getElementById('checklist_date');
+const checklistTypeInput = document.getElementById('checklist_type');
 
 const toolsList = document.getElementById('tools-list');
 const partsList = document.getElementById('parts-list');
+
+const fullToolList = [
+    'Adjustable wrench set',
+    'Allen key set',
+    'Cable ties',
+    'Caulking gun',
+    'Circuit tester',
+    'Cordless drill',
+    'Crimping tool',
+    'Digital multimeter',
+    'Duct tape',
+    'Extension ladder',
+    'Extension cords',
+    'Flashlight',
+    'Handheld vacuum',
+    'Hose clamp assortment',
+    'Infrared thermometer',
+    'Insulated screwdrivers',
+    'Level',
+    'Manifold gauge set',
+    'Nut drivers',
+    'Pliers set',
+    'PVC cutters',
+    'Recovery machine',
+    'Refrigerant scale',
+    'R-22 refrigerant',
+    'R-410A refrigerant',
+    'Safety goggles',
+    'Service wrenches',
+    'Sheet metal snips',
+    'Step ladder',
+    'Tape measure',
+    'Thermometer probe',
+    'Toolbox',
+    'Vacuum pump',
+    'Voltage tester',
+    'Work gloves',
+];
+
+const normalizeValue = (value) => value.trim().toLowerCase();
+
+const existingToolNames = () => {
+    const labels = toolsList.querySelectorAll('label');
+    return new Set(Array.from(labels).map((label) => normalizeValue(label.textContent)));
+};
 
 const createItemCard = ({ name, type }, index) => {
     const row = document.createElement('tr');
@@ -101,6 +148,23 @@ addItemButton.addEventListener('click', () => {
     const list = type === 'Part' ? partsList : toolsList;
     list.appendChild(row);
     resetNewItemFields();
+});
+
+addFullToolListButton.addEventListener('click', () => {
+    const existing = existingToolNames();
+    const startIndex = getNextIndex();
+    let currentIndex = startIndex;
+
+    fullToolList.forEach((tool) => {
+        if (existing.has(normalizeValue(tool))) {
+            return;
+        }
+        const row = createItemCard({ name: tool, type: 'Tool' }, currentIndex);
+        toolsList.appendChild(row);
+        currentIndex += 1;
+    });
+
+    checklistTypeInput.value = 'Weekly';
 });
 
 const formatDate = (date) => {

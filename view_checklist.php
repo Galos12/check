@@ -62,6 +62,8 @@ $created_at = new DateTime($checklist['created_at']);
                         <dd class="col-7"><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></dd>
                         <dt class="col-5">Date</dt>
                         <dd class="col-7"><?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?></dd>
+                        <dt class="col-5">Type</dt>
+                        <dd class="col-7"><?php echo htmlspecialchars($checklist['checklist_type'] ?? 'Daily', ENT_QUOTES); ?></dd>
                         <dt class="col-5">Created</dt>
                         <dd class="col-7"><?php echo htmlspecialchars($created_at->format('d/m/Y'), ENT_QUOTES); ?></dd>
                     </dl>

@@ -10,6 +10,7 @@ $technician_name = trim($_POST['technician_name'] ?? '');
 $van_name = trim($_POST['van_name'] ?? '');
 $checklist_date_input = trim($_POST['checklist_date'] ?? '');
 $checklist_date_display = trim($_POST['checklist_date_display'] ?? '');
+$checklist_type = trim($_POST['checklist_type'] ?? 'Daily');
 $notes = trim($_POST['notes'] ?? '');
 $items = $_POST['items'] ?? [];
 
@@ -32,15 +33,20 @@ if ($checklist_date === '') {
     $checklist_date = (new DateTime())->format('Y-m-d');
 }
 
+if (!in_array($checklist_type, ['Daily', 'Weekly'], true)) {
+    $checklist_type = 'Daily';
+}
+
 $db = get_db_connection();
 $db->beginTransaction();
 
 try {
-    $stmt = $db->prepare('INSERT INTO checklists (technician_name, van_name, checklist_date, notes) VALUES (:technician_name, :van_name, :checklist_date, :notes)');
+    $stmt = $db->prepare('INSERT INTO checklists (technician_name, van_name, checklist_date, checklist_type, notes) VALUES (:technician_name, :van_name, :checklist_date, :checklist_type, :notes)');
     $stmt->execute([
         ':technician_name' => $technician_name,
         ':van_name' => $van_name,
         ':checklist_date' => $checklist_date,
+        ':checklist_type' => $checklist_type,
         ':notes' => $notes,
     ]);
 

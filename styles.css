@@ -7,3 +7,7 @@
     width: 1%;
     white-space: nowrap;
 }
+
+.list-group-item form {
+    margin: 0;
+}

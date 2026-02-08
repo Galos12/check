@@ -1,4 +1,6 @@
 <?php
+require_once 'config.php';
+
 $default_tools = [
     'Manifold gauge set',
     'Digital multimeter',
@@ -10,12 +12,28 @@ $default_tools = [
     'PVC cutters',
 ];
 
-$default_parts = [
+$fallback_parts = [
     'Assorted fuses',
     'Capacitors',
     'Contactors',
     'Thermostat batteries',
 ];
+
+$technicians = [];
+$vans = [];
+$parts = $fallback_parts;
+
+try {
+    $db = get_db_connection();
+    $technicians = $db->query('SELECT name FROM technicians ORDER BY name')->fetchAll();
+    $vans = $db->query('SELECT name FROM vans ORDER BY name')->fetchAll();
+    $parts_rows = $db->query('SELECT name FROM parts_library ORDER BY name')->fetchAll();
+    if (!empty($parts_rows)) {
+        $parts = array_map(fn($row) => $row['name'], $parts_rows);
+    }
+} catch (Throwable $error) {
+    $parts = $fallback_parts;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -38,7 +56,10 @@ $default_parts = [
             <h1 class="display-6 fw-bold">HVAC Service Call Checklist</h1>
             <p class="text-muted mb-0">Track tools and parts technicians take on every van rollout.</p>
         </div>
-        <a class="btn btn-outline-primary mt-3 mt-md-0" href="history.php">View Past Checklists</a>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <a class="btn btn-outline-secondary" href="manage_options.php">Manage Options</a>
+            <a class="btn btn-outline-primary" href="history.php">View Past Checklists</a>
+        </div>
     </div>
 
     <div class="card shadow-sm">
@@ -47,16 +68,31 @@ $default_parts = [
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label" for="technician_name">Technician Name</label>
-                        <input class="form-control" id="technician_name" name="technician_name" required>
+                        <select class="form-select" id="technician_name" name="technician_name" required>
+                            <option value="" disabled selected>Select technician</option>
+                            <?php foreach ($technicians as $technician) : ?>
+                                <option value="<?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>">
+                                    <?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="van_name">Van Name / Number</label>
-                        <input class="form-control" id="van_name" name="van_name" required>
+                        <select class="form-select" id="van_name" name="van_name" required>
+                            <option value="" disabled selected>Select van</option>
+                            <?php foreach ($vans as $van) : ?>
+                                <option value="<?php echo htmlspecialchars($van['name'], ENT_QUOTES); ?>">
+                                    <?php echo htmlspecialchars($van['name'], ENT_QUOTES); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="checklist_date_display">Checklist Date (DD/MM/YYYY)</label>
                         <input class="form-control" id="checklist_date_display" name="checklist_date_display" placeholder="DD/MM/YYYY" required>
                         <input type="hidden" id="checklist_date" name="checklist_date">
+                        <input type="hidden" id="checklist_type" name="checklist_type" value="Daily">
                     </div>
                 </div>
 
@@ -67,9 +103,14 @@ $default_parts = [
                         <h2 class="h5 mb-0">Tools & Parts</h2>
                         <small class="text-muted">Check items loaded today. Default items stay on the list; extras can be added or removed.</small>
                     </div>
-                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#add-item-panel" aria-expanded="false" aria-controls="add-item-panel">
-                        Add Extra Item
-                    </button>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-outline-primary" type="button" id="add-full-tool-list-btn">
+                            Add Full Tool List
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#add-item-panel" aria-expanded="false" aria-controls="add-item-panel">
+                            Add Extra Item
+                        </button>
+                    </div>
                 </div>
 
                 <div class="collapse mb-3" id="add-item-panel">
@@ -147,7 +188,7 @@ $default_parts = [
                                             </tr>
                                         </thead>
                                         <tbody id="parts-list">
-                                            <?php foreach ($default_parts as $index => $part): ?>
+                                            <?php foreach ($parts as $index => $part): ?>
                                                 <?php $item_index = $index + count($default_tools); ?>
                                                 <tr>
                                                     <td class="text-center">

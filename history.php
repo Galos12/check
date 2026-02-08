@@ -2,7 +2,44 @@
 require_once 'config.php';
 
 $db = get_db_connection();
-$stmt = $db->query('SELECT id, technician_name, van_name, checklist_date, created_at FROM checklists ORDER BY checklist_date DESC, created_at DESC');
+$technicians = $db->query('SELECT name FROM technicians ORDER BY name')->fetchAll();
+$vans = $db->query('SELECT name FROM vans ORDER BY name')->fetchAll();
+
+$filters = [
+    'technician' => trim($_GET['technician'] ?? ''),
+    'van' => trim($_GET['van'] ?? ''),
+    'date' => trim($_GET['date'] ?? ''),
+];
+
+$query = 'SELECT id, technician_name, van_name, checklist_date, checklist_type, created_at FROM checklists';
+$where = [];
+$params = [];
+
+if ($filters['technician'] !== '') {
+    $where[] = 'technician_name = :technician';
+    $params[':technician'] = $filters['technician'];
+}
+
+if ($filters['van'] !== '') {
+    $where[] = 'van_name = :van';
+    $params[':van'] = $filters['van'];
+}
+
+if ($filters['date'] !== '') {
+    $date = DateTime::createFromFormat('d/m/Y', $filters['date']);
+    if ($date) {
+        $where[] = 'checklist_date = :checklist_date';
+        $params[':checklist_date'] = $date->format('Y-m-d');
+    }
+}
+
+if ($where) {
+    $query .= ' WHERE ' . implode(' AND ', $where);
+}
+
+$query .= ' ORDER BY checklist_date DESC, created_at DESC';
+$stmt = $db->prepare($query);
+$stmt->execute($params);
 $checklists = $stmt->fetchAll();
 $grouped_checklists = [];
 
@@ -32,7 +69,46 @@ foreach ($checklists as $checklist) {
             <h1 class="display-6 fw-bold">Past Checklists</h1>
             <p class="text-muted mb-0">Review previous tool and parts loadouts.</p>
         </div>
-        <a class="btn btn-outline-primary mt-3 mt-md-0" href="index.php">Create New Checklist</a>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <a class="btn btn-outline-secondary" href="manage_options.php">Manage Options</a>
+            <a class="btn btn-outline-primary" href="index.php">Create New Checklist</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form class="row g-3 align-items-end" method="get">
+                <div class="col-md-4">
+                    <label class="form-label" for="technician">Technician</label>
+                    <select class="form-select" id="technician" name="technician">
+                        <option value="">All technicians</option>
+                        <?php foreach ($technicians as $technician) : ?>
+                            <option value="<?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>" <?php echo $filters['technician'] === $technician['name'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="van">Van</label>
+                    <select class="form-select" id="van" name="van">
+                        <option value="">All vans</option>
+                        <?php foreach ($vans as $van) : ?>
+                            <option value="<?php echo htmlspecialchars($van['name'], ENT_QUOTES); ?>" <?php echo $filters['van'] === $van['name'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($van['name'], ENT_QUOTES); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="date">Checklist Date (DD/MM/YYYY)</label>
+                    <input class="form-control" id="date" name="date" value="<?php echo htmlspecialchars($filters['date'], ENT_QUOTES); ?>" placeholder="DD/MM/YYYY">
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button class="btn btn-primary" type="submit">Filter</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <div class="card shadow-sm">
@@ -59,6 +135,7 @@ foreach ($checklists as $checklist) {
                                                     <th>Technician</th>
                                                     <th>Van</th>
                                                     <th>Created At</th>
+                                                    <th>Type</th>
                                                     <th></th>
                                                 </tr>
                                             </thead>
@@ -67,12 +144,14 @@ foreach ($checklists as $checklist) {
                                                     <?php
                                                     $date = new DateTime($checklist['checklist_date']);
                                                     $created = new DateTime($checklist['created_at']);
+                                                    $type_label = $checklist['checklist_type'] ?? 'Daily';
                                                     ?>
                                                     <tr>
                                                         <td><?php echo htmlspecialchars($date->format('d/m/Y'), ENT_QUOTES); ?></td>
                                                         <td><?php echo htmlspecialchars($checklist['technician_name'], ENT_QUOTES); ?></td>
                                                         <td><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></td>
                                                         <td><?php echo htmlspecialchars($created->format('d/m/Y'), ENT_QUOTES); ?></td>
+                                                        <td><?php echo htmlspecialchars($type_label, ENT_QUOTES); ?></td>
                                                         <td class="text-end">
                                                             <a class="btn btn-sm btn-outline-secondary" href="view_checklist.php?id=<?php echo (int) $checklist['id']; ?>">View</a>
                                                         </td>
