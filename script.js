@@ -9,44 +9,8 @@ const checklistTypeInput = document.getElementById('checklist_type');
 
 const toolsList = document.getElementById('tools-list');
 const partsList = document.getElementById('parts-list');
-
-const fullToolList = [
-    'Adjustable wrench set',
-    'Allen key set',
-    'Cable ties',
-    'Caulking gun',
-    'Circuit tester',
-    'Cordless drill',
-    'Crimping tool',
-    'Digital multimeter',
-    'Duct tape',
-    'Extension ladder',
-    'Extension cords',
-    'Flashlight',
-    'Handheld vacuum',
-    'Hose clamp assortment',
-    'Infrared thermometer',
-    'Insulated screwdrivers',
-    'Level',
-    'Manifold gauge set',
-    'Nut drivers',
-    'Pliers set',
-    'PVC cutters',
-    'Recovery machine',
-    'Refrigerant scale',
-    'R-22 refrigerant',
-    'R-410A refrigerant',
-    'Safety goggles',
-    'Service wrenches',
-    'Sheet metal snips',
-    'Step ladder',
-    'Tape measure',
-    'Thermometer probe',
-    'Toolbox',
-    'Vacuum pump',
-    'Voltage tester',
-    'Work gloves',
-];
+const weeklyToolsData = addFullToolListButton?.dataset.weeklyTools;
+const weeklyTools = weeklyToolsData ? JSON.parse(weeklyToolsData) : [];
 
 const normalizeValue = (value) => value.trim().toLowerCase();
 
@@ -55,7 +19,7 @@ const existingToolNames = () => {
     return new Set(Array.from(labels).map((label) => normalizeValue(label.textContent)));
 };
 
-const createItemCard = ({ name, type }, index) => {
+const createItemCard = ({ name, type, has_counter: hasCounter }, index) => {
     const row = document.createElement('tr');
     row.dataset.removable = 'true';
 
@@ -97,6 +61,16 @@ const createItemCard = ({ name, type }, index) => {
     removeCell.className = 'text-end';
     removeCell.appendChild(removeButton);
 
+    if (hasCounter) {
+        const quantityInput = document.createElement('input');
+        quantityInput.className = 'form-control form-control-sm quantity-input';
+        quantityInput.type = 'number';
+        quantityInput.min = '0';
+        quantityInput.name = `items[${index}][quantity]`;
+        quantityInput.placeholder = 'Qty';
+        removeCell.prepend(quantityInput);
+    }
+
     row.append(checkboxCell, labelCell, removeCell);
 
     return row;
@@ -133,9 +107,9 @@ const handleRemoveItem = (event) => {
     }
 };
 
-itemsContainer.addEventListener('click', handleRemoveItem);
+itemsContainer?.addEventListener('click', handleRemoveItem);
 
-addItemButton.addEventListener('click', () => {
+addItemButton?.addEventListener('click', () => {
     const name = newItemName.value.trim();
     if (!name) {
         newItemName.focus();
@@ -150,16 +124,16 @@ addItemButton.addEventListener('click', () => {
     resetNewItemFields();
 });
 
-addFullToolListButton.addEventListener('click', () => {
+addFullToolListButton?.addEventListener('click', () => {
     const existing = existingToolNames();
     const startIndex = getNextIndex();
     let currentIndex = startIndex;
 
-    fullToolList.forEach((tool) => {
-        if (existing.has(normalizeValue(tool))) {
+    weeklyTools.forEach((tool) => {
+        if (existing.has(normalizeValue(tool.name))) {
             return;
         }
-        const row = createItemCard({ name: tool, type: 'Tool' }, currentIndex);
+        const row = createItemCard({ name: tool.name, type: 'Tool', has_counter: tool.has_counter }, currentIndex);
         toolsList.appendChild(row);
         currentIndex += 1;
     });
@@ -200,5 +174,23 @@ const syncDateInput = () => {
 };
 
 setTodayDate();
-checklistDateDisplay.addEventListener('blur', syncDateInput);
-checklistDateDisplay.addEventListener('input', syncDateInput);
+checklistDateDisplay?.addEventListener('blur', syncDateInput);
+checklistDateDisplay?.addEventListener('input', syncDateInput);
+
+const technicianSelect = document.getElementById('technician_name');
+const checklistDateField = document.getElementById('checklist_date_display');
+
+const updateAssignmentQuery = () => {
+    const technician = technicianSelect?.value;
+    const date = checklistDateField?.value;
+    if (!technician || !date) {
+        return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set('technician', technician);
+    url.searchParams.set('date', date);
+    window.location.replace(url.toString());
+};
+
+technicianSelect?.addEventListener('change', updateAssignmentQuery);
+checklistDateField?.addEventListener('change', updateAssignmentQuery);

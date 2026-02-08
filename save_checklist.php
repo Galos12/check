@@ -51,12 +51,13 @@ try {
     ]);
 
     $checklist_id = (int) $db->lastInsertId();
-    $item_stmt = $db->prepare('INSERT INTO checklist_items (checklist_id, item_name, item_type, is_checked) VALUES (:checklist_id, :item_name, :item_type, :is_checked)');
+    $item_stmt = $db->prepare('INSERT INTO checklist_items (checklist_id, item_name, item_type, is_checked, quantity) VALUES (:checklist_id, :item_name, :item_type, :is_checked, :quantity)');
 
     foreach ($items as $item) {
         $item_name = trim($item['name'] ?? '');
         $item_type = $item['type'] ?? 'Tool';
         $is_checked = isset($item['checked']) ? 1 : 0;
+        $quantity = isset($item['quantity']) && $item['quantity'] !== '' ? (int) $item['quantity'] : null;
 
         if ($item_name === '') {
             continue;
@@ -71,6 +72,7 @@ try {
             ':item_name' => $item_name,
             ':item_type' => $item_type,
             ':is_checked' => $is_checked,
+            ':quantity' => $quantity,
         ]);
     }
 

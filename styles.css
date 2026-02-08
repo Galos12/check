@@ -11,3 +11,13 @@
 .list-group-item form {
     margin: 0;
 }
+
+.scroll-list {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.quantity-input {
+    max-width: 90px;
+    display: inline-block;
+}

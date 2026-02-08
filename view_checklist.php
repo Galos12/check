@@ -17,7 +17,7 @@ if (!$checklist) {
     exit;
 }
 
-$item_stmt = $db->prepare('SELECT item_name, item_type, is_checked FROM checklist_items WHERE checklist_id = :id ORDER BY item_type, item_name');
+$item_stmt = $db->prepare('SELECT item_name, item_type, is_checked, quantity FROM checklist_items WHERE checklist_id = :id ORDER BY item_type, item_name');
 $item_stmt->execute([':id' => $checklist_id]);
 $items = $item_stmt->fetchAll();
 
@@ -89,6 +89,7 @@ $created_at = new DateTime($checklist['created_at']);
                                     <tr>
                                         <th>Item</th>
                                         <th>Type</th>
+                                        <th>Qty</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -101,6 +102,7 @@ $created_at = new DateTime($checklist['created_at']);
                                                     <?php echo htmlspecialchars($item['item_type'], ENT_QUOTES); ?>
                                                 </span>
                                             </td>
+                                            <td><?php echo $item['quantity'] !== null ? (int) $item['quantity'] : '-'; ?></td>
                                             <td>
                                                 <?php if ((int) $item['is_checked'] === 1) : ?>
                                                     <span class="badge text-bg-success">Taken</span>
