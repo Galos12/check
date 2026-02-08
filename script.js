@@ -19,9 +19,12 @@ const existingToolNames = () => {
     return new Set(Array.from(labels).map((label) => normalizeValue(label.textContent)));
 };
 
-const createItemCard = ({ name, type, has_counter: hasCounter }, index) => {
+const createItemCard = ({ name, type, has_counter: hasCounter, removable = true, weekly = false }, index) => {
     const row = document.createElement('tr');
-    row.dataset.removable = 'true';
+    row.dataset.removable = removable ? 'true' : 'false';
+    if (weekly) {
+        row.dataset.weekly = 'true';
+    }
 
     const checkbox = document.createElement('input');
     checkbox.className = 'form-check-input';
@@ -59,7 +62,9 @@ const createItemCard = ({ name, type, has_counter: hasCounter }, index) => {
 
     const removeCell = document.createElement('td');
     removeCell.className = 'text-end';
-    removeCell.appendChild(removeButton);
+    if (removable) {
+        removeCell.appendChild(removeButton);
+    }
 
     if (hasCounter) {
         const quantityInput = document.createElement('input');
@@ -67,7 +72,7 @@ const createItemCard = ({ name, type, has_counter: hasCounter }, index) => {
         quantityInput.type = 'number';
         quantityInput.min = '0';
         quantityInput.name = `items[${index}][quantity]`;
-        quantityInput.placeholder = 'Qty';
+        quantityInput.placeholder = '0';
         removeCell.prepend(quantityInput);
     }
 
@@ -102,7 +107,7 @@ const handleRemoveItem = (event) => {
     }
 
     const row = event.target.closest('[data-removable="true"]');
-    if (row) {
+    if (row && row.dataset.removable === 'true') {
         row.remove();
     }
 };
@@ -126,19 +131,36 @@ addItemButton?.addEventListener('click', () => {
 
 addFullToolListButton?.addEventListener('click', () => {
     const existing = existingToolNames();
-    const startIndex = getNextIndex();
-    let currentIndex = startIndex;
+    const weeklyRows = toolsList.querySelectorAll('tr[data-weekly="true"]');
+    if (weeklyRows.length > 0) {
+        weeklyRows.forEach((row) => row.remove());
+        checklistTypeInput.value = 'Daily';
+        addFullToolListButton.classList.remove('btn-primary', 'is-active');
+        addFullToolListButton.classList.add('btn-outline-primary');
+        addFullToolListButton.textContent = 'Add Weekly List';
+        return;
+    }
 
+    let currentIndex = getNextIndex();
     weeklyTools.forEach((tool) => {
         if (existing.has(normalizeValue(tool.name))) {
             return;
         }
-        const row = createItemCard({ name: tool.name, type: 'Tool', has_counter: tool.has_counter }, currentIndex);
+        const row = createItemCard({
+            name: tool.name,
+            type: 'Tool',
+            has_counter: tool.has_counter,
+            removable: false,
+            weekly: true,
+        }, currentIndex);
         toolsList.appendChild(row);
         currentIndex += 1;
     });
 
     checklistTypeInput.value = 'Weekly';
+    addFullToolListButton.classList.remove('btn-outline-primary');
+    addFullToolListButton.classList.add('btn-primary', 'is-active');
+    addFullToolListButton.textContent = 'Weekly List Added';
 });
 
 const formatDate = (date) => {

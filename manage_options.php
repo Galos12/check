@@ -36,6 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $date = DateTime::createFromFormat('d/m/Y', $assigned_date);
         if ($technician_id > 0 && $date) {
             $db->beginTransaction();
+            $delete_stmt = $db->prepare(
+                'DELETE FROM technician_part_assignments
+                 WHERE technician_id = :technician_id AND assigned_date = :assigned_date'
+            );
+            $delete_stmt->execute([
+                ':technician_id' => $technician_id,
+                ':assigned_date' => $date->format('Y-m-d'),
+            ]);
             $stmt = $db->prepare(
                 'INSERT INTO technician_part_assignments (technician_id, part_id, assigned_date)
                  VALUES (:technician_id, :part_id, :assigned_date)'
@@ -82,6 +90,22 @@ $vans = $db->query('SELECT name FROM vans ORDER BY name')->fetchAll();
 $parts = $db->query('SELECT id, name FROM parts_library ORDER BY name')->fetchAll();
 $daily_tools = $db->query("SELECT name, has_counter FROM tools_library WHERE category = 'Daily' ORDER BY name")->fetchAll();
 $weekly_tools = $db->query("SELECT name, has_counter FROM tools_library WHERE category = 'Weekly' ORDER BY name")->fetchAll();
+$assignments_raw = $db->query(
+    'SELECT tpa.technician_id, tpa.assigned_date, p.id AS part_id, p.name AS part_name
+     FROM technician_part_assignments tpa
+     JOIN parts_library p ON p.id = tpa.part_id
+     ORDER BY tpa.assigned_date DESC, p.name'
+)->fetchAll();
+
+$assignments = [];
+foreach ($assignments_raw as $row) {
+    $tech_id = (int) $row['technician_id'];
+    $date_key = (new DateTime($row['assigned_date']))->format('d/m/Y');
+    $assignments[$tech_id]['dates'][$date_key][] = [
+        'id' => (int) $row['part_id'],
+        'name' => $row['part_name'],
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -294,13 +318,19 @@ $weekly_tools = $db->query("SELECT name, has_counter FROM tools_library WHERE ca
                         <?php foreach ($parts as $part) : ?>
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="part-<?php echo (int) $part['id']; ?>" name="part_ids[]" value="<?php echo (int) $part['id']; ?>">
+                                    <input class="form-check-input assign-part-checkbox" type="checkbox" id="part-<?php echo (int) $part['id']; ?>" name="part_ids[]" value="<?php echo (int) $part['id']; ?>">
                                     <label class="form-check-label" for="part-<?php echo (int) $part['id']; ?>">
                                         <?php echo htmlspecialchars($part['name'], ENT_QUOTES); ?>
                                     </label>
                                 </div>
                             </div>
                         <?php endforeach; ?>
+                    </div>
+                    <div class="mt-4">
+                        <h6 class="text-uppercase text-muted">Previously Assigned</h6>
+                        <div id="assignmentHistory" class="small text-muted">
+                            Select a technician to view assigned parts by date.
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -318,16 +348,50 @@ const assignModal = document.getElementById('assignPartsModal');
 const assignTechName = document.getElementById('assignTechName');
 const assignTechId = document.getElementById('assignTechId');
 const assignedDateInput = document.getElementById('assigned_date');
+const assignmentHistory = document.getElementById('assignmentHistory');
+const assignments = <?php echo json_encode($assignments, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
 
-assignModal.addEventListener('show.bs.modal', (event) => {
-    const button = event.relatedTarget;
-    assignTechName.textContent = button.getAttribute('data-tech-name');
-    assignTechId.value = button.getAttribute('data-tech-id');
+const formatToday = () => {
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const year = today.getFullYear();
-    assignedDateInput.value = `${day}/${month}/${year}`;
+    return `${day}/${month}/${year}`;
+};
+
+const renderHistory = (techId) => {
+    const history = assignments[techId]?.dates ?? {};
+    const entries = Object.entries(history);
+    if (!entries.length) {
+        assignmentHistory.textContent = 'No assignments yet.';
+        return;
+    }
+    assignmentHistory.innerHTML = entries.map(([date, parts]) => {
+        const partNames = parts.map((part) => part.name).join(', ');
+        return `<div><strong>${date}:</strong> ${partNames}</div>`;
+    }).join('');
+};
+
+const updateCheckedParts = (techId, dateValue) => {
+    const selected = assignments[techId]?.dates?.[dateValue] ?? [];
+    const selectedIds = new Set(selected.map((part) => String(part.id)));
+    document.querySelectorAll('.assign-part-checkbox').forEach((checkbox) => {
+        checkbox.checked = selectedIds.has(checkbox.value);
+    });
+};
+
+assignModal.addEventListener('show.bs.modal', (event) => {
+    const button = event.relatedTarget;
+    const techId = button.getAttribute('data-tech-id');
+    assignTechName.textContent = button.getAttribute('data-tech-name');
+    assignTechId.value = techId;
+    assignedDateInput.value = formatToday();
+    renderHistory(techId);
+    updateCheckedParts(techId, assignedDateInput.value);
+});
+
+assignedDateInput.addEventListener('change', () => {
+    updateCheckedParts(assignTechId.value, assignedDateInput.value);
 });
 </script>
 </body>

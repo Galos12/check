@@ -110,7 +110,7 @@ if (empty($weekly_tools)) {
     $weekly_tools = array_map(fn($name) => ['name' => $name, 'has_counter' => 0], $fallback_weekly_tools);
 }
 
-$all_parts = array_values(array_unique(array_merge($parts, $assigned_parts)));
+$parts_to_show = $assigned_parts ? array_values(array_unique($assigned_parts)) : $parts;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -182,7 +182,7 @@ $all_parts = array_values(array_unique(array_merge($parts, $assigned_parts)));
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <button class="btn btn-sm btn-outline-primary" type="button" id="add-full-tool-list-btn" data-weekly-tools='<?php echo json_encode($weekly_tools, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>'>
-                            Add Full Tool List
+                            Add Weekly List
                         </button>
                         <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#add-item-panel" aria-expanded="false" aria-controls="add-item-panel">
                             Add Extra Item
@@ -224,7 +224,7 @@ $all_parts = array_values(array_unique(array_merge($parts, $assigned_parts)));
                                             <tr>
                                                 <th scope="col">Taken</th>
                                                 <th scope="col">Tool</th>
-                                                <th scope="col"></th>
+                                                <th scope="col">Qty</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tools-list">
@@ -242,7 +242,7 @@ $all_parts = array_values(array_unique(array_merge($parts, $assigned_parts)));
                                                     </td>
                                                     <td class="text-end">
                                                         <?php if ((int) $tool['has_counter'] === 1) : ?>
-                                                            <input class="form-control form-control-sm quantity-input" type="number" min="0" name="items[<?php echo $index; ?>][quantity]" placeholder="Qty">
+                                                            <input class="form-control form-control-sm quantity-input" type="number" min="0" name="items[<?php echo $index; ?>][quantity]" placeholder="0">
                                                         <?php endif; ?>
                                                     </td>
                                                 </tr>
@@ -269,7 +269,7 @@ $all_parts = array_values(array_unique(array_merge($parts, $assigned_parts)));
                                             </tr>
                                         </thead>
                                         <tbody id="parts-list">
-                                            <?php foreach ($all_parts as $index => $part): ?>
+                                            <?php foreach ($parts_to_show as $index => $part): ?>
                                                 <?php $item_index = $index + count($daily_tools); ?>
                                                 <tr>
                                                     <td class="text-center">
