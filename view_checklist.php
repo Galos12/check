@@ -20,6 +20,9 @@ if (!$checklist) {
 $item_stmt = $db->prepare('SELECT item_name, item_type, is_checked FROM checklist_items WHERE checklist_id = :id ORDER BY item_type, item_name');
 $item_stmt->execute([':id' => $checklist_id]);
 $items = $item_stmt->fetchAll();
+
+$checklist_date = new DateTime($checklist['checklist_date']);
+$created_at = new DateTime($checklist['created_at']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,7 +42,7 @@ $items = $item_stmt->fetchAll();
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h1 class="display-6 fw-bold">Checklist Details</h1>
-            <p class="text-muted mb-0">Technician loadout from <?php echo htmlspecialchars($checklist['checklist_date'], ENT_QUOTES); ?>.</p>
+            <p class="text-muted mb-0">Technician loadout from <?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?>.</p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-md-0">
             <a class="btn btn-outline-secondary" href="history.php">Back to History</a>
@@ -58,9 +61,9 @@ $items = $item_stmt->fetchAll();
                         <dt class="col-5">Van</dt>
                         <dd class="col-7"><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></dd>
                         <dt class="col-5">Date</dt>
-                        <dd class="col-7"><?php echo htmlspecialchars($checklist['checklist_date'], ENT_QUOTES); ?></dd>
+                        <dd class="col-7"><?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?></dd>
                         <dt class="col-5">Created</dt>
-                        <dd class="col-7"><?php echo htmlspecialchars($checklist['created_at'], ENT_QUOTES); ?></dd>
+                        <dd class="col-7"><?php echo htmlspecialchars($created_at->format('d/m/Y'), ENT_QUOTES); ?></dd>
                     </dl>
                     <?php if (!empty($checklist['notes'])) : ?>
                         <hr>

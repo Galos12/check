@@ -2,14 +2,15 @@ const itemsContainer = document.getElementById('items-container');
 const addItemButton = document.getElementById('add-item-btn');
 const newItemName = document.getElementById('new_item_name');
 const newItemType = document.getElementById('new_item_type');
+const checklistDateDisplay = document.getElementById('checklist_date_display');
+const checklistDateInput = document.getElementById('checklist_date');
+
+const toolsList = document.getElementById('tools-list');
+const partsList = document.getElementById('parts-list');
 
 const createItemCard = ({ name, type }, index) => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'col-md-6 col-lg-4 mb-3';
-    wrapper.dataset.removable = 'true';
-
-    const card = document.createElement('div');
-    card.className = 'form-check checklist-item p-3 border rounded';
+    const row = document.createElement('tr');
+    row.dataset.removable = 'true';
 
     const checkbox = document.createElement('input');
     checkbox.className = 'form-check-input';
@@ -29,24 +30,29 @@ const createItemCard = ({ name, type }, index) => {
     typeInput.value = type;
 
     const label = document.createElement('label');
-    label.className = 'form-check-label fw-semibold';
+    label.className = 'fw-semibold';
     label.setAttribute('for', `item-${index}`);
     label.textContent = name;
-
-    const badge = document.createElement('span');
-    badge.className = 'badge bg-secondary-subtle text-secondary-emphasis ms-2';
-    badge.textContent = type;
 
     const removeButton = document.createElement('button');
     removeButton.className = 'btn btn-sm btn-link text-danger remove-item-btn';
     removeButton.type = 'button';
     removeButton.textContent = 'Remove';
 
-    label.appendChild(badge);
-    card.append(checkbox, nameInput, typeInput, label, removeButton);
-    wrapper.appendChild(card);
+    const checkboxCell = document.createElement('td');
+    checkboxCell.className = 'text-center';
+    checkboxCell.appendChild(checkbox);
 
-    return wrapper;
+    const labelCell = document.createElement('td');
+    labelCell.append(label, nameInput, typeInput);
+
+    const removeCell = document.createElement('td');
+    removeCell.className = 'text-end';
+    removeCell.appendChild(removeButton);
+
+    row.append(checkboxCell, labelCell, removeCell);
+
+    return row;
 };
 
 const getNextIndex = () => {
@@ -74,9 +80,9 @@ const handleRemoveItem = (event) => {
         return;
     }
 
-    const card = event.target.closest('[data-removable="true"]');
-    if (card) {
-        card.remove();
+    const row = event.target.closest('[data-removable="true"]');
+    if (row) {
+        row.remove();
     }
 };
 
@@ -91,7 +97,44 @@ addItemButton.addEventListener('click', () => {
 
     const type = newItemType.value;
     const index = getNextIndex();
-    const card = createItemCard({ name, type }, index);
-    itemsContainer.appendChild(card);
+    const row = createItemCard({ name, type }, index);
+    const list = type === 'Part' ? partsList : toolsList;
+    list.appendChild(row);
     resetNewItemFields();
 });
+
+const formatDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
+const toIsoDate = (displayDate) => {
+    const [day, month, year] = displayDate.split('/');
+    if (!day || !month || !year) {
+        return '';
+    }
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+const setTodayDate = () => {
+    const today = new Date();
+    const displayValue = formatDate(today);
+    checklistDateDisplay.value = displayValue;
+    checklistDateInput.value = toIsoDate(displayValue);
+};
+
+const syncDateInput = () => {
+    const displayValue = checklistDateDisplay.value.trim();
+    if (!displayValue) {
+        checklistDateInput.value = '';
+        return;
+    }
+
+    checklistDateInput.value = toIsoDate(displayValue);
+};
+
+setTodayDate();
+checklistDateDisplay.addEventListener('blur', syncDateInput);
+checklistDateDisplay.addEventListener('input', syncDateInput);

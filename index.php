@@ -1,17 +1,20 @@
 <?php
-$default_items = [
-    ['name' => 'Manifold gauge set', 'type' => 'Tool'],
-    ['name' => 'Digital multimeter', 'type' => 'Tool'],
-    ['name' => 'Vacuum pump', 'type' => 'Tool'],
-    ['name' => 'Refrigerant scale', 'type' => 'Tool'],
-    ['name' => 'Thermometer probe', 'type' => 'Tool'],
-    ['name' => 'Cordless drill', 'type' => 'Tool'],
-    ['name' => 'Service wrenches', 'type' => 'Tool'],
-    ['name' => 'PVC cutters', 'type' => 'Tool'],
-    ['name' => 'Assorted fuses', 'type' => 'Part'],
-    ['name' => 'Capacitors', 'type' => 'Part'],
-    ['name' => 'Contactors', 'type' => 'Part'],
-    ['name' => 'Thermostat batteries', 'type' => 'Part'],
+$default_tools = [
+    'Manifold gauge set',
+    'Digital multimeter',
+    'Vacuum pump',
+    'Refrigerant scale',
+    'Thermometer probe',
+    'Cordless drill',
+    'Service wrenches',
+    'PVC cutters',
+];
+
+$default_parts = [
+    'Assorted fuses',
+    'Capacitors',
+    'Contactors',
+    'Thermostat batteries',
 ];
 ?>
 <!DOCTYPE html>
@@ -51,8 +54,9 @@ $default_items = [
                         <input class="form-control" id="van_name" name="van_name" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="checklist_date">Checklist Date</label>
-                        <input class="form-control" id="checklist_date" name="checklist_date" type="date" required>
+                        <label class="form-label" for="checklist_date_display">Checklist Date (DD/MM/YYYY)</label>
+                        <input class="form-control" id="checklist_date_display" name="checklist_date_display" placeholder="DD/MM/YYYY" required>
+                        <input type="hidden" id="checklist_date" name="checklist_date">
                     </div>
                 </div>
 
@@ -89,20 +93,82 @@ $default_items = [
                     </div>
                 </div>
 
-                <div class="row" id="items-container">
-                    <?php foreach ($default_items as $index => $item): ?>
-                        <div class="col-md-6 col-lg-4 mb-3">
-                            <div class="form-check checklist-item p-3 border rounded">
-                                <input class="form-check-input" type="checkbox" id="item-<?php echo $index; ?>" name="items[<?php echo $index; ?>][checked]" value="1">
-                                <input type="hidden" name="items[<?php echo $index; ?>][name]" value="<?php echo htmlspecialchars($item['name'], ENT_QUOTES); ?>">
-                                <input type="hidden" name="items[<?php echo $index; ?>][type]" value="<?php echo htmlspecialchars($item['type'], ENT_QUOTES); ?>">
-                                <label class="form-check-label fw-semibold" for="item-<?php echo $index; ?>">
-                                    <?php echo htmlspecialchars($item['name'], ENT_QUOTES); ?>
-                                    <span class="badge bg-secondary-subtle text-secondary-emphasis ms-2"><?php echo htmlspecialchars($item['type'], ENT_QUOTES); ?></span>
-                                </label>
+                <div class="row g-4" id="items-container">
+                    <div class="col-lg-6">
+                        <div class="card checklist-card h-100">
+                            <div class="card-header bg-white">
+                                <h3 class="h6 mb-0 text-uppercase text-muted">Tools</h3>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th scope="col">Taken</th>
+                                                <th scope="col">Tool</th>
+                                                <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tools-list">
+                                            <?php foreach ($default_tools as $index => $tool): ?>
+                                                <tr>
+                                                    <td class="text-center">
+                                                        <input class="form-check-input" type="checkbox" id="tool-<?php echo $index; ?>" name="items[<?php echo $index; ?>][checked]" value="1">
+                                                    </td>
+                                                    <td>
+                                                        <label class="fw-semibold" for="tool-<?php echo $index; ?>">
+                                                            <?php echo htmlspecialchars($tool, ENT_QUOTES); ?>
+                                                        </label>
+                                                        <input type="hidden" name="items[<?php echo $index; ?>][name]" value="<?php echo htmlspecialchars($tool, ENT_QUOTES); ?>">
+                                                        <input type="hidden" name="items[<?php echo $index; ?>][type]" value="Tool">
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    <?php endforeach; ?>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card checklist-card h-100">
+                            <div class="card-header bg-white">
+                                <h3 class="h6 mb-0 text-uppercase text-muted">Parts</h3>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th scope="col">Taken</th>
+                                                <th scope="col">Part</th>
+                                                <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="parts-list">
+                                            <?php foreach ($default_parts as $index => $part): ?>
+                                                <?php $item_index = $index + count($default_tools); ?>
+                                                <tr>
+                                                    <td class="text-center">
+                                                        <input class="form-check-input" type="checkbox" id="part-<?php echo $item_index; ?>" name="items[<?php echo $item_index; ?>][checked]" value="1">
+                                                    </td>
+                                                    <td>
+                                                        <label class="fw-semibold" for="part-<?php echo $item_index; ?>">
+                                                            <?php echo htmlspecialchars($part, ENT_QUOTES); ?>
+                                                        </label>
+                                                        <input type="hidden" name="items[<?php echo $item_index; ?>][name]" value="<?php echo htmlspecialchars($part, ENT_QUOTES); ?>">
+                                                        <input type="hidden" name="items[<?php echo $item_index; ?>][type]" value="Part">
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mt-4">

@@ -1,14 +1,9 @@
-.checklist-item {
-    background-color: #ffffff;
-    position: relative;
+.checklist-card .table > :not(caption) > * > * {
+    padding: 0.75rem 1rem;
 }
 
-.checklist-item .remove-item-btn {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-}
-
-.checklist-item .form-check-input {
-    margin-top: 0.35rem;
+.checklist-card .table thead th:last-child,
+.checklist-card .table tbody td:last-child {
+    width: 1%;
+    white-space: nowrap;
 }

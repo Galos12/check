@@ -8,13 +8,28 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $technician_name = trim($_POST['technician_name'] ?? '');
 $van_name = trim($_POST['van_name'] ?? '');
-$checklist_date = $_POST['checklist_date'] ?? '';
+$checklist_date_input = trim($_POST['checklist_date'] ?? '');
+$checklist_date_display = trim($_POST['checklist_date_display'] ?? '');
 $notes = trim($_POST['notes'] ?? '');
 $items = $_POST['items'] ?? [];
 
-if ($technician_name === '' || $van_name === '' || $checklist_date === '') {
+if ($technician_name === '' || $van_name === '' || ($checklist_date_input === '' && $checklist_date_display === '')) {
     header('Location: index.php');
     exit;
+}
+
+$checklist_date = $checklist_date_input;
+if ($checklist_date === '' && $checklist_date_display !== '') {
+    $checklist_date = $checklist_date_display;
+}
+
+if (strpos($checklist_date, '/') !== false) {
+    $date = DateTime::createFromFormat('d/m/Y', $checklist_date);
+    $checklist_date = $date ? $date->format('Y-m-d') : '';
+}
+
+if ($checklist_date === '') {
+    $checklist_date = (new DateTime())->format('Y-m-d');
 }
 
 $db = get_db_connection();
