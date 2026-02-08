@@ -1,0 +1,14 @@
+.checklist-item {
+    background-color: #ffffff;
+    position: relative;
+}
+
+.checklist-item .remove-item-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+}
+
+.checklist-item .form-check-input {
+    margin-top: 0.35rem;
+}
