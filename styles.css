@@ -1,0 +1,36 @@
+.checklist-card .table > :not(caption) > * > * {
+    padding: 0.75rem 1rem;
+}
+
+.checklist-card .table thead th:last-child,
+.checklist-card .table tbody td:last-child {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.checklist-card .table thead th {
+    font-weight: 600;
+}
+
+.checklist-card .table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.list-group-item form {
+    margin: 0;
+}
+
+.scroll-list {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.quantity-input {
+    max-width: 90px;
+    display: inline-block;
+}
+
+.btn-outline-primary.is-active {
+    background-color: #0d6efd;
+    color: #fff;
+}
