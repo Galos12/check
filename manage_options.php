@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($tool_id > 0) {
             $stmt = $db->prepare('DELETE FROM tools_library WHERE id = :id');
             $stmt->execute([':id' => $tool_id]);
-            $message = 'Tool removed.';
+            $message = 'Herramienta eliminada.';
         }
     } elseif ($action === 'assign_parts') {
         $technician_id = (int) ($_POST['technician_id'] ?? 0);
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
             }
             $db->commit();
-            $message = 'Parts assigned.';
+            $message = 'Repuestos asignados.';
         }
     } elseif ($action === 'update_tool_categories') {
         $tool_ids = array_map('intval', $_POST['tool_ids'] ?? []);
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id' => $tool_id,
                 ]);
             }
-            $message = 'Tool list updated.';
+            $message = 'Lista de herramientas actualizada.';
         }
     } elseif ($value !== '' && isset($action_map[$action])) {
         $table = $action_map[$action]['table'];
@@ -94,11 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $db->prepare("INSERT IGNORE INTO {$table} ({$column}) VALUES (:value)");
                 $stmt->execute([':value' => $value]);
             }
-            $message = 'Saved.';
+            $message = 'Guardado.';
         } elseif (str_starts_with($action, 'remove_')) {
             $stmt = $db->prepare("DELETE FROM {$table} WHERE {$column} = :value");
             $stmt->execute([':value' => $value]);
-            $message = 'Removed.';
+            $message = 'Eliminado.';
         }
     }
 }
@@ -129,7 +129,7 @@ foreach ($assignments_raw as $row) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Manage Checklist Options</title>
+    <title>Administrar opciones de checklist</title>
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -141,12 +141,12 @@ foreach ($assignments_raw as $row) {
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="display-6 fw-bold">Manage Checklist Options</h1>
-            <p class="text-muted mb-0">Update technicians, vans, and parts available for daily checklists.</p>
+            <h1 class="display-6 fw-bold">Administrar opciones del checklist</h1>
+            <p class="text-muted mb-0">Actualiza técnicos, vans, repuestos y herramientas disponibles.</p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-md-0">
-            <a class="btn btn-outline-secondary" href="index.php">Back to Checklist</a>
-            <a class="btn btn-outline-primary" href="history.php">View History</a>
+            <a class="btn btn-outline-secondary" href="index.php">Volver al checklist</a>
+            <a class="btn btn-outline-primary" href="history.php">Ver historial</a>
         </div>
     </div>
 
@@ -158,11 +158,11 @@ foreach ($assignments_raw as $row) {
         <div class="col-lg-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="h5">Technicians</h2>
+                    <h2 class="h5">Técnicos</h2>
                     <form class="d-flex gap-2 mb-3" method="post">
                         <input type="hidden" name="action" value="add_technician">
-                        <input class="form-control" name="value" placeholder="Add technician name" required>
-                        <button class="btn btn-primary" type="submit">Add</button>
+                        <input class="form-control" name="value" placeholder="Agregar técnico" required>
+                        <button class="btn btn-primary" type="submit">Agregar</button>
                     </form>
                     <ul class="list-group scroll-list">
                         <?php foreach ($technicians as $technician) : ?>
@@ -173,12 +173,12 @@ foreach ($assignments_raw as $row) {
                                 <form method="post">
                                     <input type="hidden" name="action" value="remove_technician">
                                     <input type="hidden" name="value" value="<?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>">
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Quitar</button>
                                 </form>
                             </li>
                         <?php endforeach; ?>
                     </ul>
-                    <small class="text-muted d-block mt-2">Click a technician to assign parts for a specific date.</small>
+                    <small class="text-muted d-block mt-2">Haz clic en un técnico para asignar repuestos por fecha.</small>
                 </div>
             </div>
         </div>
@@ -188,8 +188,8 @@ foreach ($assignments_raw as $row) {
                     <h2 class="h5">Vans</h2>
                     <form class="d-flex gap-2 mb-3" method="post">
                         <input type="hidden" name="action" value="add_van">
-                        <input class="form-control" name="value" placeholder="Add van name/number" required>
-                        <button class="btn btn-primary" type="submit">Add</button>
+                        <input class="form-control" name="value" placeholder="Agregar van" required>
+                        <button class="btn btn-primary" type="submit">Agregar</button>
                     </form>
                     <ul class="list-group scroll-list">
                         <?php foreach ($vans as $van) : ?>
@@ -198,7 +198,7 @@ foreach ($assignments_raw as $row) {
                                 <form method="post">
                                     <input type="hidden" name="action" value="remove_van">
                                     <input type="hidden" name="value" value="<?php echo htmlspecialchars($van['name'], ENT_QUOTES); ?>">
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Quitar</button>
                                 </form>
                             </li>
                         <?php endforeach; ?>
@@ -209,11 +209,11 @@ foreach ($assignments_raw as $row) {
         <div class="col-lg-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="h5">Daily Parts</h2>
+                    <h2 class="h5">Repuestos diarios</h2>
                     <form class="d-flex gap-2 mb-3" method="post">
                         <input type="hidden" name="action" value="add_part">
-                        <input class="form-control" name="value" placeholder="Add part name" required>
-                        <button class="btn btn-primary" type="submit">Add</button>
+                        <input class="form-control" name="value" placeholder="Agregar repuesto" required>
+                        <button class="btn btn-primary" type="submit">Agregar</button>
                     </form>
                     <ul class="list-group scroll-list">
                         <?php foreach ($parts as $part) : ?>
@@ -222,7 +222,7 @@ foreach ($assignments_raw as $row) {
                                 <form method="post">
                                     <input type="hidden" name="action" value="remove_part">
                                     <input type="hidden" name="value" value="<?php echo htmlspecialchars($part['name'], ENT_QUOTES); ?>">
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Quitar</button>
                                 </form>
                             </li>
                         <?php endforeach; ?>
@@ -236,21 +236,21 @@ foreach ($assignments_raw as $row) {
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h2 class="h5">Tools Checklist</h2>
+                    <h2 class="h5">Checklist de herramientas</h2>
                     <form class="row g-2 align-items-end mb-3" method="post">
                         <input type="hidden" name="action" value="add_tool">
                         <div class="col-md-6">
-                            <label class="form-label" for="tool_name">Tool Name</label>
-                            <input class="form-control" id="tool_name" name="value" placeholder="Add tool" required>
+                            <label class="form-label" for="tool_name">Nombre de herramienta</label>
+                            <input class="form-control" id="tool_name" name="value" placeholder="Agregar herramienta" required>
                         </div>
                         <div class="col-md-4">
                             <div class="form-check mt-4">
                                 <input class="form-check-input" type="checkbox" id="tool_has_counter" name="has_counter" value="1">
-                                <label class="form-check-label" for="tool_has_counter">Requires counter</label>
+                                <label class="form-check-label" for="tool_has_counter">Requiere contador</label>
                             </div>
                         </div>
                         <div class="col-md-2 d-grid">
-                            <button class="btn btn-primary" type="submit">Add</button>
+                            <button class="btn btn-primary" type="submit">Agregar</button>
                         </div>
                     </form>
 
@@ -260,10 +260,10 @@ foreach ($assignments_raw as $row) {
                             <table class="table align-middle table-hover">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Tool</th>
-                                        <th>Counter</th>
-                                        <th>Daily</th>
-                                        <th>Weekly</th>
+                                        <th>Herramienta</th>
+                                        <th>Contador</th>
+                                        <th>Diario</th>
+                                        <th>Semanal</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -276,7 +276,7 @@ foreach ($assignments_raw as $row) {
                                             </td>
                                             <td>
                                                 <?php if ((int) $tool['has_counter'] === 1) : ?>
-                                                    <span class="badge text-bg-info">Counter</span>
+                                                    <span class="badge text-bg-info">Contador</span>
                                                 <?php else : ?>
                                                     <span class="text-muted">No</span>
                                                 <?php endif; ?>
@@ -288,7 +288,7 @@ foreach ($assignments_raw as $row) {
                                                 <input class="form-check-input" type="checkbox" name="weekly_tool_ids[]" value="<?php echo (int) $tool['id']; ?>" <?php echo (int) $tool['is_weekly'] === 1 ? 'checked' : ''; ?>>
                                             </td>
                                             <td class="text-end">
-                                                <button class="btn btn-sm btn-outline-danger" type="submit" name="remove_tool" value="<?php echo (int) $tool['id']; ?>" formnovalidate>Remove</button>
+                                                <button class="btn btn-sm btn-outline-danger" type="submit" name="remove_tool" value="<?php echo (int) $tool['id']; ?>" formnovalidate>Quitar</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -296,7 +296,7 @@ foreach ($assignments_raw as $row) {
                             </table>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button class="btn btn-primary" type="submit">Save Tool Selection</button>
+                            <button class="btn btn-primary" type="submit">Guardar selección</button>
                         </div>
                     </form>
                 </div>
@@ -310,38 +310,44 @@ foreach ($assignments_raw as $row) {
         <div class="modal-content">
             <form method="post">
                 <div class="modal-header">
-                    <h5 class="modal-title">Assign Parts to <span id="assignTechName"></span></h5>
+                    <h5 class="modal-title">Asignar repuestos a <span id="assignTechName"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="action" value="assign_parts">
                     <input type="hidden" name="technician_id" id="assignTechId">
                     <div class="mb-3">
-                        <label class="form-label" for="assigned_date">Assignment Date (DD/MM/YYYY)</label>
-                        <input class="form-control" id="assigned_date" name="assigned_date" placeholder="DD/MM/YYYY" required>
+                        <label class="form-label" for="assigned_date">Fecha de asignación (DD/MM/AAAA)</label>
+                        <input class="form-control" id="assigned_date" name="assigned_date" placeholder="DD/MM/AAAA" required>
                     </div>
-                    <div class="row">
-                        <?php foreach ($parts as $part) : ?>
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <input class="form-check-input assign-part-checkbox" type="checkbox" id="part-<?php echo (int) $part['id']; ?>" name="part_ids[]" value="<?php echo (int) $part['id']; ?>">
-                                    <label class="form-check-label" for="part-<?php echo (int) $part['id']; ?>">
-                                        <?php echo htmlspecialchars($part['name'], ENT_QUOTES); ?>
-                                    </label>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                    <div class="table-responsive modal-scroll-table">
+                        <table class="table table-sm align-middle mb-0">
+                            <tbody>
+                                <?php foreach ($parts as $part) : ?>
+                                    <tr>
+                                        <td class="text-center" style="width: 32px;">
+                                            <input class="form-check-input assign-part-checkbox" type="checkbox" id="part-<?php echo (int) $part['id']; ?>" name="part_ids[]" value="<?php echo (int) $part['id']; ?>">
+                                        </td>
+                                        <td>
+                                            <label class="form-check-label" for="part-<?php echo (int) $part['id']; ?>">
+                                                <?php echo htmlspecialchars($part['name'], ENT_QUOTES); ?>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                     <div class="mt-4">
-                        <h6 class="text-uppercase text-muted">Previously Assigned</h6>
+                        <h6 class="text-uppercase text-muted">Asignaciones previas</h6>
                         <div id="assignmentHistory" class="small text-muted">
-                            Select a technician to view assigned parts by date.
+                            Selecciona un técnico para ver asignaciones por fecha.
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-primary" type="submit">Send</button>
+                    <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" type="submit">Enviar</button>
                 </div>
             </form>
         </div>
@@ -369,7 +375,7 @@ const renderHistory = (techId) => {
     const history = assignments[techId]?.dates ?? {};
     const entries = Object.entries(history);
     if (!entries.length) {
-        assignmentHistory.textContent = 'No assignments yet.';
+        assignmentHistory.textContent = 'Sin asignaciones aún.';
         return;
     }
     assignmentHistory.innerHTML = entries.map(([date, parts]) => {

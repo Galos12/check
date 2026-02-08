@@ -119,7 +119,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>HVAC Van Checklist</title>
+    <title>Lista de Verificación HVAC</title>
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -132,12 +132,12 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="display-6 fw-bold">HVAC Service Call Checklist</h1>
-            <p class="text-muted mb-0">Track tools and parts technicians take on every van rollout.</p>
+            <h1 class="display-6 fw-bold">Lista de Verificación de Servicio HVAC</h1>
+            <p class="text-muted mb-0">Registra herramientas y repuestos que los técnicos llevan en cada salida.</p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-md-0">
-            <a class="btn btn-outline-secondary" href="manage_options.php">Manage Options</a>
-            <a class="btn btn-outline-primary" href="history.php">View Past Checklists</a>
+            <a class="btn btn-outline-secondary" href="manage_options.php">Administrar opciones</a>
+            <a class="btn btn-outline-primary" href="history.php">Ver listas anteriores</a>
         </div>
     </div>
 
@@ -146,9 +146,9 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
             <form id="checklist-form" action="save_checklist.php" method="post">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label" for="technician_name">Technician Name</label>
+                        <label class="form-label" for="technician_name">Técnico</label>
                         <select class="form-select" id="technician_name" name="technician_name" required>
-                            <option value="" disabled selected>Select technician</option>
+                            <option value="" disabled selected>Selecciona técnico</option>
                             <?php foreach ($technicians as $technician) : ?>
                                 <option value="<?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>" <?php echo $selected_technician === $technician['name'] ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>
@@ -157,9 +157,9 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="van_name">Van Name / Number</label>
+                        <label class="form-label" for="van_name">Unidad / Número de van</label>
                         <select class="form-select" id="van_name" name="van_name" required>
-                            <option value="" disabled selected>Select van</option>
+                            <option value="" disabled selected>Selecciona van</option>
                             <?php foreach ($vans as $van) : ?>
                                 <option value="<?php echo htmlspecialchars($van['name'], ENT_QUOTES); ?>" <?php echo $selected_van === $van['name'] ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($van['name'], ENT_QUOTES); ?>
@@ -168,8 +168,8 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="checklist_date_display">Checklist Date (DD/MM/YYYY)</label>
-                        <input class="form-control" id="checklist_date_display" name="checklist_date_display" placeholder="DD/MM/YYYY" value="<?php echo htmlspecialchars($selected_date_display, ENT_QUOTES); ?>" required>
+                        <label class="form-label" for="checklist_date_display">Fecha de lista (DD/MM/AAAA)</label>
+                        <input class="form-control" id="checklist_date_display" name="checklist_date_display" placeholder="DD/MM/AAAA" value="<?php echo htmlspecialchars($selected_date_display, ENT_QUOTES); ?>" required>
                         <input type="hidden" id="checklist_date" name="checklist_date">
                         <input type="hidden" id="checklist_type" name="checklist_type" value="Daily">
                     </div>
@@ -179,15 +179,15 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
 
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                     <div>
-                        <h2 class="h5 mb-0">Tools & Parts</h2>
-                        <small class="text-muted">Check items loaded today. Default items stay on the list; extras can be added or removed.</small>
+                        <h2 class="h5 mb-0">Herramientas y Repuestos</h2>
+                        <small class="text-muted">Marca lo cargado hoy. Los elementos base se mantienen; los extras se pueden agregar o quitar.</small>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <button class="btn btn-sm btn-outline-primary" type="button" id="add-full-tool-list-btn" data-weekly-tools='<?php echo json_encode($weekly_tools, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>'>
-                            Add Weekly List
+                            Agregar lista semanal
                         </button>
                         <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#add-item-panel" aria-expanded="false" aria-controls="add-item-panel">
-                            Add Extra Item
+                            Agregar extra
                         </button>
                     </div>
                 </div>
@@ -196,18 +196,18 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                     <div class="card card-body bg-light border">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-6">
-                                <label class="form-label" for="new_item_name">Item Name</label>
-                                <input class="form-control" id="new_item_name" type="text" placeholder="Example: Extension ladder">
+                                <label class="form-label" for="new_item_name">Nombre del ítem</label>
+                                <input class="form-control" id="new_item_name" type="text" placeholder="Ejemplo: Escalera">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label" for="new_item_type">Type</label>
+                                <label class="form-label" for="new_item_type">Tipo</label>
                                 <select class="form-select" id="new_item_type">
-                                    <option value="Tool">Tool</option>
-                                    <option value="Part">Part</option>
+                                    <option value="Tool">Herramienta</option>
+                                    <option value="Part">Repuesto</option>
                                 </select>
                             </div>
                             <div class="col-md-2 d-grid">
-                                <button class="btn btn-primary" type="button" id="add-item-btn">Add</button>
+                                <button class="btn btn-primary" type="button" id="add-item-btn">Agregar</button>
                             </div>
                         </div>
                     </div>
@@ -217,21 +217,21 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                     <div class="col-lg-6">
                         <div class="card checklist-card h-100">
                             <div class="card-header bg-white">
-                                <h3 class="h6 mb-0 text-uppercase text-muted">Tools</h3>
+                                <h3 class="h6 mb-0 text-uppercase text-muted">Herramientas</h3>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th scope="col">Taken</th>
-                                                <th scope="col">Tool</th>
-                                                <th scope="col">Qty</th>
+                                                <th scope="col">Llevado</th>
+                                                <th scope="col">Herramienta</th>
+                                                <th scope="col">Cant.</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tools-list">
                                             <tr id="tools-empty" class="<?php echo $show_checklist ? 'd-none' : ''; ?>">
-                                                <td colspan="3" class="text-center text-muted py-4">Select technician and van to view tools.</td>
+                                                <td colspan="3" class="text-center text-muted py-4">Selecciona técnico y van para ver herramientas.</td>
                                             </tr>
                                             <?php if ($show_checklist) : ?>
                                                 <?php foreach ($daily_tools as $index => $tool): ?>
@@ -263,25 +263,25 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                     <div class="col-lg-6">
                         <div class="card checklist-card h-100">
                             <div class="card-header bg-white">
-                                <h3 class="h6 mb-0 text-uppercase text-muted">Parts</h3>
+                                <h3 class="h6 mb-0 text-uppercase text-muted">Repuestos</h3>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th scope="col">Taken</th>
-                                                <th scope="col">Part</th>
+                                                <th scope="col">Llevado</th>
+                                                <th scope="col">Repuesto</th>
                                                 <th scope="col"></th>
                                             </tr>
                                         </thead>
                                         <tbody id="parts-list">
                                             <tr id="parts-empty" class="<?php echo $show_checklist ? 'd-none' : ''; ?>">
-                                                <td colspan="3" class="text-center text-muted py-4">Select technician and van to view parts.</td>
+                                                <td colspan="3" class="text-center text-muted py-4">Selecciona técnico y van para ver repuestos.</td>
                                             </tr>
                                             <?php if ($show_checklist && empty($parts_to_show)) : ?>
                                                 <tr>
-                                                    <td colspan="3" class="text-center text-muted py-4">No parts assigned for this technician/date.</td>
+                                                    <td colspan="3" class="text-center text-muted py-4">No hay repuestos asignados para este técnico/fecha.</td>
                                                 </tr>
                                             <?php endif; ?>
                                             <?php if ($show_checklist) : ?>
@@ -296,7 +296,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                                                                 <?php echo htmlspecialchars($part, ENT_QUOTES); ?>
                                                             </label>
                                                             <?php if (in_array($part, $assigned_parts, true)) : ?>
-                                                                <span class="badge text-bg-info ms-2">Assigned</span>
+                                                                <span class="badge text-bg-info ms-2">Asignado</span>
                                                             <?php endif; ?>
                                                             <input type="hidden" name="items[<?php echo $item_index; ?>][name]" value="<?php echo htmlspecialchars($part, ENT_QUOTES); ?>">
                                                             <input type="hidden" name="items[<?php echo $item_index; ?>][type]" value="Part">
@@ -314,13 +314,13 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                 </div>
 
                 <div class="mt-4">
-                    <label class="form-label" for="notes">Notes</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Optional notes about the loadout"></textarea>
+                    <label class="form-label" for="notes">Notas</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Notas opcionales sobre la carga"></textarea>
                 </div>
 
                 <div class="d-flex flex-wrap gap-2 mt-4">
-                    <button class="btn btn-success" type="submit">Save Checklist</button>
-                    <button class="btn btn-outline-secondary" type="reset">Clear</button>
+                    <button class="btn btn-success" type="submit">Guardar lista</button>
+                    <button class="btn btn-outline-secondary" type="reset">Limpiar</button>
                 </div>
             </form>
         </div>

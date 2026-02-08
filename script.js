@@ -137,7 +137,7 @@ addFullToolListButton?.addEventListener('click', () => {
         checklistTypeInput.value = 'Daily';
         addFullToolListButton.classList.remove('btn-primary', 'is-active');
         addFullToolListButton.classList.add('btn-outline-primary');
-        addFullToolListButton.textContent = 'Add Weekly List';
+        addFullToolListButton.textContent = 'Agregar lista semanal';
         return;
     }
 
@@ -160,7 +160,7 @@ addFullToolListButton?.addEventListener('click', () => {
     checklistTypeInput.value = 'Weekly';
     addFullToolListButton.classList.remove('btn-outline-primary');
     addFullToolListButton.classList.add('btn-primary', 'is-active');
-    addFullToolListButton.textContent = 'Weekly List Added';
+    addFullToolListButton.textContent = 'Lista semanal agregada';
 });
 
 const formatDate = (date) => {
@@ -213,8 +213,13 @@ if (window.jQuery) {
 
         const toggleTables = () => {
             const hasSelection = $technician.val() && $van.val();
-            $toolsEmpty.toggleClass('d-none', hasSelection);
-            $partsEmpty.toggleClass('d-none', hasSelection);
+            if (hasSelection) {
+                $toolsEmpty.hide();
+                $partsEmpty.hide();
+            } else {
+                $toolsEmpty.show();
+                $partsEmpty.show();
+            }
         };
 
         const updateQuery = () => {

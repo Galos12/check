@@ -46,7 +46,7 @@ if ($technician) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Checklist Details</title>
+    <title>Detalle del checklist</title>
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -58,12 +58,12 @@ if ($technician) {
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="display-6 fw-bold">Checklist Details</h1>
-            <p class="text-muted mb-0">Technician loadout from <?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?>.</p>
+            <h1 class="display-6 fw-bold">Detalle del checklist</h1>
+            <p class="text-muted mb-0">Carga del técnico del <?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?>.</p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-md-0">
-            <a class="btn btn-outline-secondary" href="history.php">Back to History</a>
-            <a class="btn btn-outline-primary" href="index.php">New Checklist</a>
+            <a class="btn btn-outline-secondary" href="history.php">Volver al historial</a>
+            <a class="btn btn-outline-primary" href="index.php">Nuevo checklist</a>
         </div>
     </div>
 
@@ -71,22 +71,23 @@ if ($technician) {
         <div class="col-lg-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h2 class="h5">Checklist Info</h2>
+                    <h2 class="h5">Información</h2>
                     <dl class="row mb-0">
-                        <dt class="col-5">Technician</dt>
+                        <dt class="col-5">Técnico</dt>
                         <dd class="col-7"><?php echo htmlspecialchars($checklist['technician_name'], ENT_QUOTES); ?></dd>
                         <dt class="col-5">Van</dt>
                         <dd class="col-7"><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></dd>
-                        <dt class="col-5">Date</dt>
+                        <dt class="col-5">Fecha</dt>
                         <dd class="col-7"><?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?></dd>
-                        <dt class="col-5">Type</dt>
-                        <dd class="col-7"><?php echo htmlspecialchars($checklist['checklist_type'] ?? 'Daily', ENT_QUOTES); ?></dd>
-                        <dt class="col-5">Created</dt>
+                        <dt class="col-5">Tipo</dt>
+                        <?php $type_label = ($checklist['checklist_type'] ?? 'Daily') === 'Weekly' ? 'Semanal' : 'Diario'; ?>
+                        <dd class="col-7"><?php echo htmlspecialchars($type_label, ENT_QUOTES); ?></dd>
+                        <dt class="col-5">Creado</dt>
                         <dd class="col-7"><?php echo htmlspecialchars($created_at->format('d/m/Y'), ENT_QUOTES); ?></dd>
                     </dl>
                     <?php if (!empty($checklist['notes'])) : ?>
                         <hr>
-                        <h3 class="h6">Notes</h3>
+                        <h3 class="h6">Notas</h3>
                         <p class="mb-0"><?php echo nl2br(htmlspecialchars($checklist['notes'], ENT_QUOTES)); ?></p>
                     <?php endif; ?>
                 </div>
@@ -96,19 +97,19 @@ if ($technician) {
         <div class="col-lg-8">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h2 class="h5">Tools & Parts</h2>
+                    <h2 class="h5">Herramientas y Repuestos</h2>
                     <?php if (empty($items)) : ?>
-                        <p class="text-muted mb-0">No items were saved for this checklist.</p>
+                        <p class="text-muted mb-0">No se guardaron ítems en este checklist.</p>
                     <?php else : ?>
                         <div class="table-responsive">
                             <table class="table align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Item</th>
-                                        <th>Type</th>
-                                        <th>Qty</th>
-                                        <th>Assigned</th>
-                                        <th>Status</th>
+                                        <th>Ítem</th>
+                                        <th>Tipo</th>
+                                        <th>Cant.</th>
+                                        <th>Asignado</th>
+                                        <th>Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -124,7 +125,7 @@ if ($technician) {
                                             <td>
                                                 <?php if ($item['item_type'] === 'Part') : ?>
                                                     <?php if (in_array($item['item_name'], $assigned_parts, true)) : ?>
-                                                        <span class="badge text-bg-info">Assigned</span>
+                                                        <span class="badge text-bg-info">Asignado</span>
                                                     <?php else : ?>
                                                         <span class="text-muted">No</span>
                                                     <?php endif; ?>
@@ -134,9 +135,9 @@ if ($technician) {
                                             </td>
                                             <td>
                                                 <?php if ((int) $item['is_checked'] === 1) : ?>
-                                                    <span class="badge text-bg-success">Taken</span>
+                                                    <span class="badge text-bg-success">Llevado</span>
                                                 <?php else : ?>
-                                                    <span class="badge text-bg-secondary">Not Taken</span>
+                                                    <span class="badge text-bg-secondary">No llevado</span>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>

@@ -56,7 +56,7 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Past Checklists</title>
+    <title>Historial de checklists</title>
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -68,12 +68,12 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="display-6 fw-bold">Past Checklists</h1>
-            <p class="text-muted mb-0">Review previous tool and parts loadouts.</p>
+            <h1 class="display-6 fw-bold">Historial de checklists</h1>
+            <p class="text-muted mb-0">Revisa cargas anteriores de herramientas y repuestos.</p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-md-0">
-            <a class="btn btn-outline-secondary" href="manage_options.php">Manage Options</a>
-            <a class="btn btn-outline-primary" href="index.php">Create New Checklist</a>
+            <a class="btn btn-outline-secondary" href="manage_options.php">Administrar opciones</a>
+            <a class="btn btn-outline-primary" href="index.php">Crear checklist</a>
         </div>
     </div>
 
@@ -81,9 +81,9 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
         <div class="card-body">
             <form class="row g-3 align-items-end" method="get">
                 <div class="col-md-4">
-                    <label class="form-label" for="technician">Technician</label>
+                    <label class="form-label" for="technician">Técnico</label>
                     <select class="form-select" id="technician" name="technician">
-                        <option value="">All technicians</option>
+                        <option value="">Todos los técnicos</option>
                         <?php foreach ($technicians as $technician) : ?>
                             <option value="<?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>" <?php echo $filters['technician'] === $technician['name'] ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>
@@ -94,7 +94,7 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
                 <div class="col-md-4">
                     <label class="form-label" for="van">Van</label>
                     <select class="form-select" id="van" name="van">
-                        <option value="">All vans</option>
+                        <option value="">Todas las vans</option>
                         <?php foreach ($vans as $van) : ?>
                             <option value="<?php echo htmlspecialchars($van['name'], ENT_QUOTES); ?>" <?php echo $filters['van'] === $van['name'] ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($van['name'], ENT_QUOTES); ?>
@@ -103,11 +103,11 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label" for="date">Checklist Date (DD/MM/YYYY)</label>
-                    <input class="form-control" id="date" name="date" value="<?php echo htmlspecialchars($filters['date'], ENT_QUOTES); ?>" placeholder="DD/MM/YYYY">
+                    <label class="form-label" for="date">Fecha del checklist (DD/MM/AAAA)</label>
+                    <input class="form-control" id="date" name="date" value="<?php echo htmlspecialchars($filters['date'], ENT_QUOTES); ?>" placeholder="DD/MM/AAAA">
                 </div>
                 <div class="col-md-1 d-grid">
-                    <button class="btn btn-primary" type="submit">Filter</button>
+                    <button class="btn btn-primary" type="submit">Filtrar</button>
                 </div>
             </form>
         </div>
@@ -116,18 +116,18 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
     <div class="card shadow-sm">
         <div class="card-body">
             <?php if (empty($checklists)) : ?>
-                <p class="text-muted mb-0">No checklists have been saved yet.</p>
+                <p class="text-muted mb-0">Aún no hay checklists guardados.</p>
             <?php else : ?>
                 <?php if ($has_filters) : ?>
                     <div class="table-responsive">
                         <table class="table align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>Checklist Date</th>
-                                    <th>Technician</th>
+                                    <th>Fecha</th>
+                                    <th>Técnico</th>
                                     <th>Van</th>
-                                    <th>Created At</th>
-                                    <th>Type</th>
+                                    <th>Creado</th>
+                                    <th>Tipo</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -143,9 +143,9 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
                                         <td><?php echo htmlspecialchars($checklist['technician_name'], ENT_QUOTES); ?></td>
                                         <td><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></td>
                                         <td><?php echo htmlspecialchars($created->format('d/m/Y'), ENT_QUOTES); ?></td>
-                                        <td><?php echo htmlspecialchars($type_label, ENT_QUOTES); ?></td>
+                                        <td><?php echo htmlspecialchars($type_label === 'Weekly' ? 'Semanal' : 'Diario', ENT_QUOTES); ?></td>
                                         <td class="text-end">
-                                            <a class="btn btn-sm btn-outline-secondary" href="view_checklist.php?id=<?php echo (int) $checklist['id']; ?>">View</a>
+                                            <a class="btn btn-sm btn-outline-secondary" href="view_checklist.php?id=<?php echo (int) $checklist['id']; ?>">Ver</a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -168,11 +168,11 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
                                             <table class="table align-middle mb-0">
                                                 <thead>
                                                     <tr>
-                                                        <th>Checklist Date</th>
-                                                        <th>Technician</th>
+                                                        <th>Fecha</th>
+                                                        <th>Técnico</th>
                                                         <th>Van</th>
-                                                        <th>Created At</th>
-                                                        <th>Type</th>
+                                                        <th>Creado</th>
+                                                        <th>Tipo</th>
                                                         <th></th>
                                                     </tr>
                                                 </thead>
@@ -188,9 +188,9 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
                                                             <td><?php echo htmlspecialchars($checklist['technician_name'], ENT_QUOTES); ?></td>
                                                             <td><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></td>
                                                             <td><?php echo htmlspecialchars($created->format('d/m/Y'), ENT_QUOTES); ?></td>
-                                                            <td><?php echo htmlspecialchars($type_label, ENT_QUOTES); ?></td>
+                                                            <td><?php echo htmlspecialchars($type_label === 'Weekly' ? 'Semanal' : 'Diario', ENT_QUOTES); ?></td>
                                                             <td class="text-end">
-                                                                <a class="btn btn-sm btn-outline-secondary" href="view_checklist.php?id=<?php echo (int) $checklist['id']; ?>">View</a>
+                                                                <a class="btn btn-sm btn-outline-secondary" href="view_checklist.php?id=<?php echo (int) $checklist['id']; ?>">Ver</a>
                                                             </td>
                                                         </tr>
                                                     <?php endforeach; ?>
