@@ -1,0 +1,15 @@
+[app]
+  # update `app` if you want a custom name; flyctl may override on create
+  name = "check-app"
+  primary_region = "iad"
+
+[build]
+  image = ""
+
+[mounts]
+  source = "check-data"
+  destination = "/data"
+
+[env]
+  # Example: set any env vars here
+  APP_ENV = "production"
