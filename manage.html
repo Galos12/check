@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Administrar Opciones</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1>Administrar Opciones</h1>
+      <div class="gap-2 d-flex">
+        <a href="index.html" class="btn btn-outline-secondary">Volver al checklist</a>
+        <a href="history.html" class="btn btn-outline-primary">Ver historial</a>
+      </div>
+    </div>
+
+    <div id="status-msg"></div>
+
+    <div class="row g-4">
+      <div class="col-lg-3">
+        <div class="card">
+          <div class="card-body">
+            <h5>Técnicos</h5>
+            <form id="tech-form" class="d-flex gap-2 mb-3">
+              <input type="text" id="tech-input" class="form-control" placeholder="Agregar técnico" required>
+              <button class="btn btn-primary" type="submit">Agregar</button>
+            </form>
+            <ul id="tech-list" class="list-group"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3">
+        <div class="card">
+          <div class="card-body">
+            <h5>Vans</h5>
+            <form id="van-form" class="d-flex gap-2 mb-3">
+              <input type="text" id="van-input" class="form-control" placeholder="Agregar van" required>
+              <button class="btn btn-primary" type="submit">Agregar</button>
+            </form>
+            <ul id="van-list" class="list-group"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3">
+        <div class="card">
+          <div class="card-body">
+            <h5>Repuestos</h5>
+            <form id="part-form" class="d-flex gap-2 mb-3">
+              <input type="text" id="part-input" class="form-control" placeholder="Agregar repuesto" required>
+              <button class="btn btn-primary" type="submit">Agregar</button>
+            </form>
+            <ul id="part-list" class="list-group"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3">
+        <div class="card">
+          <div class="card-body">
+            <h5>Herramientas</h5>
+            <form id="tool-form" class="d-flex gap-2 mb-3" onsubmit="return false;">
+              <input type="text" id="tool-input" class="form-control" placeholder="Agregar herramienta" required>
+              <button class="btn btn-primary" type="button" onclick="addTool()">Agregar</button>
+            </form>
+            <ul id="tool-list" class="list-group"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/module/index.js" type="module"></script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/module/index.js';
+
+    const supabase = createClient('https://ocdggtgrpgcfjnnepxic.supabase.co', 'sb_publishable_iKGbPVOME_fCMdGmiIOTSA_zbq5yZCB');
+
+    function showStatus(msg, type) {
+      document.getElementById('status-msg').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    }
+
+    async function loadData() {
+      const [techs, vans, parts, tools] = await Promise.all([
+        supabase.from('technicians').select('*').order('name'),
+        supabase.from('vans').select('*').order('name'),
+        supabase.from('parts_library').select('*').order('name'),
+        supabase.from('tools_library').select('*').order('name')
+      ]);
+
+      // Render lists
+      document.getElementById('tech-list').innerHTML = (techs.data || []).map(t => `
+        <li class="list-group-item d-flex justify-content-between">
+          ${t.name}
+          <button class="btn btn-sm btn-danger" onclick="deleteTech('${t.name}')">Quitar</button>
+        </li>
+      `).join('');
+
+      document.getElementById('van-list').innerHTML = (vans.data || []).map(v => `
+        <li class="list-group-item d-flex justify-content-between">
+          ${v.name}
+          <button class="btn btn-sm btn-danger" onclick="deleteVan('${v.name}')">Quitar</button>
+        </li>
+      `).join('');
+
+      document.getElementById('part-list').innerHTML = (parts.data || []).map(p => `
+        <li class="list-group-item d-flex justify-content-between">
+          ${p.name}
+          <button class="btn btn-sm btn-danger" onclick="deletePart('${p.name}')">Quitar</button>
+        </li>
+      `).join('');
+
+      document.getElementById('tool-list').innerHTML = (tools.data || []).map(t => `
+        <li class="list-group-item d-flex justify-content-between">
+          ${t.name}
+          <button class="btn btn-sm btn-danger" onclick="deleteTool(${t.id})">Quitar</button>
+        </li>
+      `).join('');
+    }
+
+    window.addTech = async () => {
+      const name = document.getElementById('tech-input').value.trim();
+      if (!name) return;
+      const { error } = await supabase.from('technicians').insert({ name });
+      if (error) showStatus('Error: ' + error.message, 'danger');
+      else { document.getElementById('tech-input').value = ''; loadData(); }
+    };
+
+    window.deleteTech = async (name) => {
+      await supabase.from('technicians').delete().eq('name', name);
+      loadData();
+    };
+
+    window.addVan = async () => {
+      const name = document.getElementById('van-input').value.trim();
+      if (!name) return;
+      const { error } = await supabase.from('vans').insert({ name });
+      if (error) showStatus('Error: ' + error.message, 'danger');
+      else { document.getElementById('van-input').value = ''; loadData(); }
+    };
+
+    window.deleteVan = async (name) => {
+      await supabase.from('vans').delete().eq('name', name);
+      loadData();
+    };
+
+    window.addPart = async () => {
+      const name = document.getElementById('part-input').value.trim();
+      if (!name) return;
+      const { error } = await supabase.from('parts_library').insert({ name });
+      if (error) showStatus('Error: ' + error.message, 'danger');
+      else { document.getElementById('part-input').value = ''; loadData(); }
+    };
+
+    window.deletePart = async (name) => {
+      await supabase.from('parts_library').delete().eq('name', name);
+      loadData();
+    };
+
+    window.addTool = async () => {
+      const name = document.getElementById('tool-input').value.trim();
+      if (!name) return;
+      const { error } = await supabase.from('tools_library').insert({ name, has_counter: 0, is_daily: 0, is_weekly: 0 });
+      if (error) showStatus('Error: ' + error.message, 'danger');
+      else { document.getElementById('tool-input').value = ''; loadData(); }
+    };
+
+    window.deleteTool = async (id) => {
+      await supabase.from('tools_library').delete().eq('id', id);
+      loadData();
+    };
+
+    // Form listeners
+    document.getElementById('tech-form').addEventListener('submit', e => { e.preventDefault(); window.addTech(); });
+    document.getElementById('van-form').addEventListener('submit', e => { e.preventDefault(); window.addVan(); });
+    document.getElementById('part-form').addEventListener('submit', e => { e.preventDefault(); window.addPart(); });
+
+    loadData();
+  </script>
+</body>
+</html>
