@@ -69,32 +69,61 @@ $selected_date_display = $_GET['date'] ?? '';
 
 try {
     $db = get_db_connection();
-    $technicians = $db->query('SELECT name FROM technicians ORDER BY name')->fetchAll();
-    $vans = $db->query('SELECT name FROM vans ORDER BY name')->fetchAll();
-    $parts_rows = $db->query('SELECT name FROM parts_library ORDER BY name')->fetchAll();
-    $daily_tools = $db->query("SELECT name, has_counter FROM tools_library WHERE is_daily = 1 ORDER BY name")->fetchAll();
-    $weekly_tools = $db->query("SELECT name, has_counter FROM tools_library WHERE is_weekly = 1 ORDER BY name")->fetchAll();
+    $technicians_result = $db->query('SELECT name FROM technicians ORDER BY name');
+    if ($technicians_result === false) {
+        throw new RuntimeException($db->error);
+    }
+    $technicians = $technicians_result->fetch_all(MYSQLI_ASSOC);
+
+    $vans_result = $db->query('SELECT name FROM vans ORDER BY name');
+    if ($vans_result === false) {
+        throw new RuntimeException($db->error);
+    }
+    $vans = $vans_result->fetch_all(MYSQLI_ASSOC);
+
+    $parts_result = $db->query('SELECT name FROM parts_library ORDER BY name');
+    if ($parts_result === false) {
+        throw new RuntimeException($db->error);
+    }
+    $parts_rows = $parts_result->fetch_all(MYSQLI_ASSOC);
+
+    $daily_tools_result = $db->query("SELECT name, has_counter FROM tools_library WHERE is_daily = 1 ORDER BY name");
+    if ($daily_tools_result === false) {
+        throw new RuntimeException($db->error);
+    }
+    $daily_tools = $daily_tools_result->fetch_all(MYSQLI_ASSOC);
+
+    $weekly_tools_result = $db->query("SELECT name, has_counter FROM tools_library WHERE is_weekly = 1 ORDER BY name");
+    if ($weekly_tools_result === false) {
+        throw new RuntimeException($db->error);
+    }
+    $weekly_tools = $weekly_tools_result->fetch_all(MYSQLI_ASSOC);
+
     if (!empty($parts_rows)) {
         $parts = array_map(fn($row) => $row['name'], $parts_rows);
     }
 
     if ($selected_technician !== '' && $selected_date_display !== '') {
         $date = DateTime::createFromFormat('d/m/Y', $selected_date_display);
-        $technician_stmt = $db->prepare('SELECT id FROM technicians WHERE name = :name');
-        $technician_stmt->execute([':name' => $selected_technician]);
-        $technician = $technician_stmt->fetch();
+        $technician_stmt = $db->prepare('SELECT id FROM technicians WHERE name = ?');
+        $technician_stmt->bind_param('s', $selected_technician);
+        $technician_stmt->execute();
+        $technician_result = $technician_stmt->get_result();
+        $technician = $technician_result ? $technician_result->fetch_assoc() : null;
         if ($date && $technician) {
             $parts_stmt = $db->prepare(
                 'SELECT p.name FROM technician_part_assignments tpa
                  JOIN parts_library p ON p.id = tpa.part_id
-                 WHERE tpa.technician_id = :technician_id AND tpa.assigned_date = :assigned_date
+                 WHERE tpa.technician_id = ? AND tpa.assigned_date = ?
                  ORDER BY p.name'
             );
-            $parts_stmt->execute([
-                ':technician_id' => $technician['id'],
-                ':assigned_date' => $date->format('Y-m-d'),
-            ]);
-            $assigned_parts = array_map(fn($row) => $row['name'], $parts_stmt->fetchAll());
+            $assigned_date = $date->format('Y-m-d');
+            $technician_id = (int) $technician['id'];
+            $parts_stmt->bind_param('is', $technician_id, $assigned_date);
+            $parts_stmt->execute();
+            $parts_result = $parts_stmt->get_result();
+            $assigned_rows = $parts_result ? $parts_result->fetch_all(MYSQLI_ASSOC) : [];
+            $assigned_parts = array_map(fn($row) => $row['name'], $assigned_rows);
         }
     }
 } catch (Throwable $error) {

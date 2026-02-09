@@ -8,37 +8,46 @@ if ($checklist_id <= 0) {
 }
 
 $db = get_db_connection();
-$checklist_stmt = $db->prepare('SELECT * FROM checklists WHERE id = :id');
-$checklist_stmt->execute([':id' => $checklist_id]);
-$checklist = $checklist_stmt->fetch();
+$checklist_stmt = $db->prepare('SELECT * FROM checklists WHERE id = ?');
+$checklist_stmt->bind_param('i', $checklist_id);
+$checklist_stmt->execute();
+$checklist_result = $checklist_stmt->get_result();
+$checklist = $checklist_result ? $checklist_result->fetch_assoc() : null;
 
 if (!$checklist) {
     header('Location: history.php');
     exit;
 }
 
-$item_stmt = $db->prepare('SELECT item_name, item_type, is_checked, quantity FROM checklist_items WHERE checklist_id = :id ORDER BY item_type, item_name');
-$item_stmt->execute([':id' => $checklist_id]);
-$items = $item_stmt->fetchAll();
+$item_stmt = $db->prepare('SELECT item_name, item_type, is_checked, quantity FROM checklist_items WHERE checklist_id = ? ORDER BY item_type, item_name');
+$item_stmt->bind_param('i', $checklist_id);
+$item_stmt->execute();
+$item_result = $item_stmt->get_result();
+$items = $item_result ? $item_result->fetch_all(MYSQLI_ASSOC) : [];
 
 $checklist_date = new DateTime($checklist['checklist_date']);
 $created_at = new DateTime($checklist['created_at']);
 $assigned_parts = [];
 
-$technician_stmt = $db->prepare('SELECT id FROM technicians WHERE name = :name');
-$technician_stmt->execute([':name' => $checklist['technician_name']]);
-$technician = $technician_stmt->fetch();
+$technician_name = $checklist['technician_name'];
+$technician_stmt = $db->prepare('SELECT id FROM technicians WHERE name = ?');
+$technician_stmt->bind_param('s', $technician_name);
+$technician_stmt->execute();
+$technician_result = $technician_stmt->get_result();
+$technician = $technician_result ? $technician_result->fetch_assoc() : null;
 if ($technician) {
     $assigned_stmt = $db->prepare(
         'SELECT p.name FROM technician_part_assignments tpa
          JOIN parts_library p ON p.id = tpa.part_id
-         WHERE tpa.technician_id = :technician_id AND tpa.assigned_date = :assigned_date'
+         WHERE tpa.technician_id = ? AND tpa.assigned_date = ?'
     );
-    $assigned_stmt->execute([
-        ':technician_id' => $technician['id'],
-        ':assigned_date' => $checklist_date->format('Y-m-d'),
-    ]);
-    $assigned_parts = array_map(fn($row) => $row['name'], $assigned_stmt->fetchAll());
+    $technician_id = (int) $technician['id'];
+    $assigned_date = $checklist_date->format('Y-m-d');
+    $assigned_stmt->bind_param('is', $technician_id, $assigned_date);
+    $assigned_stmt->execute();
+    $assigned_result = $assigned_stmt->get_result();
+    $assigned_rows = $assigned_result ? $assigned_result->fetch_all(MYSQLI_ASSOC) : [];
+    $assigned_parts = array_map(fn($row) => $row['name'], $assigned_rows);
 }
 ?>
 <!DOCTYPE html>

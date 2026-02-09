@@ -29,8 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['remove_tool'])) {
         $tool_id = (int) $_POST['remove_tool'];
         if ($tool_id > 0) {
-            $stmt = $db->prepare('DELETE FROM tools_library WHERE id = :id');
-            $stmt->execute([':id' => $tool_id]);
+            $stmt = $db->prepare('DELETE FROM tools_library WHERE id = ?');
+            $stmt->bind_param('i', $tool_id);
+            $stmt->execute();
             $message = 'Herramienta eliminada.';
         }
     } elseif ($action === 'assign_parts') {
@@ -40,25 +41,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $date = DateTime::createFromFormat('d/m/Y', $assigned_date);
         if ($technician_id > 0 && $date) {
-            $db->beginTransaction();
+            $db->begin_transaction();
             $delete_stmt = $db->prepare(
                 'DELETE FROM technician_part_assignments
-                 WHERE technician_id = :technician_id AND assigned_date = :assigned_date'
+                 WHERE technician_id = ? AND assigned_date = ?'
             );
-            $delete_stmt->execute([
-                ':technician_id' => $technician_id,
-                ':assigned_date' => $date->format('Y-m-d'),
-            ]);
+            $assigned_date = $date->format('Y-m-d');
+            $delete_stmt->bind_param('is', $technician_id, $assigned_date);
+            $delete_stmt->execute();
             $stmt = $db->prepare(
                 'INSERT INTO technician_part_assignments (technician_id, part_id, assigned_date)
-                 VALUES (:technician_id, :part_id, :assigned_date)'
+                 VALUES (?, ?, ?)'
             );
             foreach ($part_ids as $part_id) {
-                $stmt->execute([
-                    ':technician_id' => $technician_id,
-                    ':part_id' => (int) $part_id,
-                    ':assigned_date' => $date->format('Y-m-d'),
-                ]);
+                $part_id = (int) $part_id;
+                $stmt->bind_param('iis', $technician_id, $part_id, $assigned_date);
+                $stmt->execute();
             }
             $db->commit();
             $message = 'Repuestos asignados.';
@@ -68,13 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $daily_ids = array_map('intval', $_POST['daily_tool_ids'] ?? []);
         $weekly_ids = array_map('intval', $_POST['weekly_tool_ids'] ?? []);
         if ($tool_ids) {
-            $stmt = $db->prepare('UPDATE tools_library SET is_daily = :is_daily, is_weekly = :is_weekly WHERE id = :id');
+            $stmt = $db->prepare('UPDATE tools_library SET is_daily = ?, is_weekly = ? WHERE id = ?');
             foreach ($tool_ids as $tool_id) {
-                $stmt->execute([
-                    ':is_daily' => in_array($tool_id, $daily_ids, true) ? 1 : 0,
-                    ':is_weekly' => in_array($tool_id, $weekly_ids, true) ? 1 : 0,
-                    ':id' => $tool_id,
-                ]);
+                $is_daily = in_array($tool_id, $daily_ids, true) ? 1 : 0;
+                $is_weekly = in_array($tool_id, $weekly_ids, true) ? 1 : 0;
+                $stmt->bind_param('iii', $is_daily, $is_weekly, $tool_id);
+                $stmt->execute();
             }
             $message = 'Lista de herramientas actualizada.';
         }
@@ -85,34 +82,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (str_starts_with($action, 'add_')) {
             $has_counter = isset($_POST['has_counter']) ? 1 : 0;
             if ($action === 'add_tool') {
-                $stmt = $db->prepare("INSERT IGNORE INTO {$table} ({$column}, has_counter, is_daily, is_weekly) VALUES (:value, :has_counter, 0, 0)");
-                $stmt->execute([
-                    ':value' => $value,
-                    ':has_counter' => $has_counter,
-                ]);
+                $is_daily = 0;
+                $is_weekly = 0;
+                $stmt = $db->prepare("INSERT IGNORE INTO {$table} ({$column}, has_counter, is_daily, is_weekly) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param('siii', $value, $has_counter, $is_daily, $is_weekly);
+                $stmt->execute();
             } else {
-                $stmt = $db->prepare("INSERT IGNORE INTO {$table} ({$column}) VALUES (:value)");
-                $stmt->execute([':value' => $value]);
+                $stmt = $db->prepare("INSERT IGNORE INTO {$table} ({$column}) VALUES (?)");
+                $stmt->bind_param('s', $value);
+                $stmt->execute();
             }
             $message = 'Guardado.';
         } elseif (str_starts_with($action, 'remove_')) {
-            $stmt = $db->prepare("DELETE FROM {$table} WHERE {$column} = :value");
-            $stmt->execute([':value' => $value]);
+            $stmt = $db->prepare("DELETE FROM {$table} WHERE {$column} = ?");
+            $stmt->bind_param('s', $value);
+            $stmt->execute();
             $message = 'Eliminado.';
         }
     }
 }
 
-$technicians = $db->query('SELECT id, name FROM technicians ORDER BY name')->fetchAll();
-$vans = $db->query('SELECT name FROM vans ORDER BY name')->fetchAll();
-$parts = $db->query('SELECT id, name FROM parts_library ORDER BY name')->fetchAll();
-$tools = $db->query('SELECT id, name, has_counter, is_daily, is_weekly FROM tools_library ORDER BY name')->fetchAll();
-$assignments_raw = $db->query(
+$technicians_result = $db->query('SELECT id, name FROM technicians ORDER BY name');
+if ($technicians_result === false) {
+    throw new RuntimeException($db->error);
+}
+$technicians = $technicians_result->fetch_all(MYSQLI_ASSOC);
+
+$vans_result = $db->query('SELECT name FROM vans ORDER BY name');
+if ($vans_result === false) {
+    throw new RuntimeException($db->error);
+}
+$vans = $vans_result->fetch_all(MYSQLI_ASSOC);
+
+$parts_result = $db->query('SELECT id, name FROM parts_library ORDER BY name');
+if ($parts_result === false) {
+    throw new RuntimeException($db->error);
+}
+$parts = $parts_result->fetch_all(MYSQLI_ASSOC);
+
+$tools_result = $db->query('SELECT id, name, has_counter, is_daily, is_weekly FROM tools_library ORDER BY name');
+if ($tools_result === false) {
+    throw new RuntimeException($db->error);
+}
+$tools = $tools_result->fetch_all(MYSQLI_ASSOC);
+
+$assignments_result = $db->query(
     'SELECT tpa.technician_id, tpa.assigned_date, p.id AS part_id, p.name AS part_name
      FROM technician_part_assignments tpa
      JOIN parts_library p ON p.id = tpa.part_id
      ORDER BY tpa.assigned_date DESC, p.name'
-)->fetchAll();
+);
+if ($assignments_result === false) {
+    throw new RuntimeException($db->error);
+}
+$assignments_raw = $assignments_result->fetch_all(MYSQLI_ASSOC);
 
 $assignments = [];
 foreach ($assignments_raw as $row) {

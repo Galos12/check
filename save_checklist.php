@@ -38,20 +38,15 @@ if (!in_array($checklist_type, ['Daily', 'Weekly'], true)) {
 }
 
 $db = get_db_connection();
-$db->beginTransaction();
+$db->begin_transaction();
 
 try {
-    $stmt = $db->prepare('INSERT INTO checklists (technician_name, van_name, checklist_date, checklist_type, notes) VALUES (:technician_name, :van_name, :checklist_date, :checklist_type, :notes)');
-    $stmt->execute([
-        ':technician_name' => $technician_name,
-        ':van_name' => $van_name,
-        ':checklist_date' => $checklist_date,
-        ':checklist_type' => $checklist_type,
-        ':notes' => $notes,
-    ]);
+    $stmt = $db->prepare('INSERT INTO checklists (technician_name, van_name, checklist_date, checklist_type, notes) VALUES (?, ?, ?, ?, ?)');
+    $stmt->bind_param('sssss', $technician_name, $van_name, $checklist_date, $checklist_type, $notes);
+    $stmt->execute();
 
-    $checklist_id = (int) $db->lastInsertId();
-    $item_stmt = $db->prepare('INSERT INTO checklist_items (checklist_id, item_name, item_type, is_checked, quantity) VALUES (:checklist_id, :item_name, :item_type, :is_checked, :quantity)');
+    $checklist_id = (int) $db->insert_id;
+    $item_stmt = $db->prepare('INSERT INTO checklist_items (checklist_id, item_name, item_type, is_checked, quantity) VALUES (?, ?, ?, ?, ?)');
 
     foreach ($items as $item) {
         $item_name = trim($item['name'] ?? '');
@@ -67,20 +62,15 @@ try {
             $item_type = 'Tool';
         }
 
-        $item_stmt->execute([
-            ':checklist_id' => $checklist_id,
-            ':item_name' => $item_name,
-            ':item_type' => $item_type,
-            ':is_checked' => $is_checked,
-            ':quantity' => $quantity,
-        ]);
+        $item_stmt->bind_param('issii', $checklist_id, $item_name, $item_type, $is_checked, $quantity);
+        $item_stmt->execute();
     }
 
     $db->commit();
     header('Location: view_checklist.php?id=' . $checklist_id);
     exit;
 } catch (Throwable $error) {
-    $db->rollBack();
+    $db->rollback();
     http_response_code(500);
     echo 'Unable to save checklist. Please try again.';
 }

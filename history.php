@@ -2,8 +2,17 @@
 require_once 'config.php';
 
 $db = get_db_connection();
-$technicians = $db->query('SELECT name FROM technicians ORDER BY name')->fetchAll();
-$vans = $db->query('SELECT name FROM vans ORDER BY name')->fetchAll();
+$technicians_result = $db->query('SELECT name FROM technicians ORDER BY name');
+if ($technicians_result === false) {
+    throw new RuntimeException($db->error);
+}
+$technicians = $technicians_result->fetch_all(MYSQLI_ASSOC);
+
+$vans_result = $db->query('SELECT name FROM vans ORDER BY name');
+if ($vans_result === false) {
+    throw new RuntimeException($db->error);
+}
+$vans = $vans_result->fetch_all(MYSQLI_ASSOC);
 
 $filters = [
     'technician' => trim($_GET['technician'] ?? ''),
@@ -14,22 +23,26 @@ $filters = [
 $query = 'SELECT id, technician_name, van_name, checklist_date, checklist_type, created_at FROM checklists';
 $where = [];
 $params = [];
+$types = '';
 
 if ($filters['technician'] !== '') {
-    $where[] = 'technician_name = :technician';
-    $params[':technician'] = $filters['technician'];
+    $where[] = 'technician_name = ?';
+    $params[] = $filters['technician'];
+    $types .= 's';
 }
 
 if ($filters['van'] !== '') {
-    $where[] = 'van_name = :van';
-    $params[':van'] = $filters['van'];
+    $where[] = 'van_name = ?';
+    $params[] = $filters['van'];
+    $types .= 's';
 }
 
 if ($filters['date'] !== '') {
     $date = DateTime::createFromFormat('d/m/Y', $filters['date']);
     if ($date) {
-        $where[] = 'checklist_date = :checklist_date';
-        $params[':checklist_date'] = $date->format('Y-m-d');
+        $where[] = 'checklist_date = ?';
+        $params[] = $date->format('Y-m-d');
+        $types .= 's';
     }
 }
 
@@ -39,8 +52,12 @@ if ($where) {
 
 $query .= ' ORDER BY checklist_date DESC, created_at DESC';
 $stmt = $db->prepare($query);
-$stmt->execute($params);
-$checklists = $stmt->fetchAll();
+if ($params) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+$checklists = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 $grouped_checklists = [];
 
 foreach ($checklists as $checklist) {

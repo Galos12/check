@@ -5,13 +5,17 @@ const DB_NAME = 'hvac_checklists';
 const DB_USER = 'root';
 const DB_PASS = 'password';
 
-function get_db_connection(): PDO
+function get_db_connection(): mysqli
 {
-    $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
-    $options = [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ];
+    $connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
-    return new PDO($dsn, DB_USER, DB_PASS, $options);
+    if ($connection->connect_error) {
+        throw new RuntimeException('Database connection failed: ' . $connection->connect_error);
+    }
+
+    if (!$connection->set_charset('utf8mb4')) {
+        throw new RuntimeException('Unable to set database charset.');
+    }
+
+    return $connection;
 }
