@@ -100,6 +100,22 @@ try {
         $db->query("ALTER TABLE parts_library ADD COLUMN stock INT NOT NULL DEFAULT 0");
     }
 
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['action'] ?? '') === 'add_manual_part')) {
+        $manual_name = trim($_POST['manual_part_name'] ?? '');
+        $manual_type = trim($_POST['manual_part_type'] ?? '');
+        $manual_stock = (int) ($_POST['manual_part_stock'] ?? 0);
+
+        if ($manual_name === '') {
+            $error = 'El nombre del repuesto es obligatorio.';
+        } else {
+            $stmt = $db->prepare('INSERT INTO parts_library (name, part_type, stock) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE stock = VALUES(stock)');
+            $stmt->bind_param('ssi', $manual_name, $manual_type, $manual_stock);
+            $stmt->execute();
+            $message = 'Repuesto guardado correctamente.';
+        }
+    }
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['parts_excel'])) {
         $upload = $_FILES['parts_excel'];
         if (!empty($upload['tmp_name']) && (int) $upload['error'] === UPLOAD_ERR_OK) {
@@ -164,7 +180,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-light">
+<body class="bg-light lg-theme">
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -193,6 +209,30 @@ try {
                 </div>
                 <div class="col-md-4 d-grid">
                     <button class="btn btn-primary" type="submit">Cargar inventario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Agregar repuesto manualmente</h2>
+            <form method="post" class="row g-3 align-items-end">
+                <input type="hidden" name="action" value="add_manual_part">
+                <div class="col-md-5">
+                    <label class="form-label" for="manual_part_name">Nombre del repuesto</label>
+                    <input class="form-control" id="manual_part_name" name="manual_part_name" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="manual_part_type">Tipo de repuesto</label>
+                    <input class="form-control" id="manual_part_type" name="manual_part_type" placeholder="Ejemplo: Eléctrico">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="manual_part_stock">Stock</label>
+                    <input class="form-control" type="number" min="0" id="manual_part_stock" name="manual_part_stock" value="0" required>
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button class="btn btn-outline-primary" type="submit">Añadir</button>
                 </div>
             </form>
         </div>

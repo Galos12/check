@@ -56,3 +56,23 @@ CREATE TABLE IF NOT EXISTS technician_part_assignments (
     FOREIGN KEY (technician_id) REFERENCES technicians(id) ON DELETE CASCADE,
     FOREIGN KEY (part_id) REFERENCES parts_library(id) ON DELETE CASCADE
 );
+
+
+CREATE TABLE IF NOT EXISTS checklist_revisions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    checklist_id INT NOT NULL,
+    revision_number INT NOT NULL,
+    saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_revision (checklist_id, revision_number),
+    FOREIGN KEY (checklist_id) REFERENCES checklists(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS checklist_revision_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    revision_id INT NOT NULL,
+    item_name VARCHAR(150) NOT NULL,
+    item_type ENUM('Tool', 'Part') NOT NULL,
+    is_checked TINYINT(1) NOT NULL DEFAULT 0,
+    quantity INT NULL,
+    FOREIGN KEY (revision_id) REFERENCES checklist_revisions(id) ON DELETE CASCADE
+);

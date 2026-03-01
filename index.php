@@ -63,6 +63,9 @@ $parts = $fallback_parts;
 $daily_tools = [];
 $weekly_tools = [];
 $assigned_parts = [];
+$existing_checklist = null;
+$existing_items_map = [];
+$existing_part_names = [];
 $selected_technician = $_GET['technician'] ?? '';
 $selected_van = $_GET['van'] ?? '';
 $selected_date_display = $_GET['date'] ?? '';
@@ -126,6 +129,38 @@ try {
             $assigned_parts = array_map(fn($row) => $row['name'], $assigned_rows);
         }
     }
+
+
+    if ($selected_technician !== '' && $selected_van !== '' && $selected_date_display !== '') {
+        $date = DateTime::createFromFormat('d/m/Y', $selected_date_display);
+        if ($date) {
+            $search_date = $date->format('Y-m-d');
+            $existing_stmt = $db->prepare('SELECT id, notes FROM checklists WHERE technician_name = ? AND van_name = ? AND checklist_date = ? AND checklist_type = "Daily" ORDER BY created_at DESC LIMIT 1');
+            $existing_stmt->bind_param('sss', $selected_technician, $selected_van, $search_date);
+            $existing_stmt->execute();
+            $existing_result = $existing_stmt->get_result();
+            $existing_checklist = $existing_result ? $existing_result->fetch_assoc() : null;
+
+            if ($existing_checklist) {
+                $items_stmt = $db->prepare('SELECT item_name, item_type, is_checked, quantity FROM checklist_items WHERE checklist_id = ?');
+                $existing_id = (int) $existing_checklist['id'];
+                $items_stmt->bind_param('i', $existing_id);
+                $items_stmt->execute();
+                $items_result = $items_stmt->get_result();
+                $existing_rows = $items_result ? $items_result->fetch_all(MYSQLI_ASSOC) : [];
+                foreach ($existing_rows as $row) {
+                    $key = strtolower(trim($row['item_type'] . '|' . $row['item_name']));
+                    $existing_items_map[$key] = [
+                        'checked' => (int) $row['is_checked'] === 1,
+                        'quantity' => $row['quantity'] !== null ? (int) $row['quantity'] : null,
+                    ];
+                    if ($row['item_type'] === 'Part') {
+                        $existing_part_names[] = $row['item_name'];
+                    }
+                }
+            }
+        }
+    }
 } catch (Throwable $error) {
     $parts = $fallback_parts;
     $daily_tools = array_map(fn($name) => ['name' => $name, 'has_counter' => 0], $fallback_daily_tools);
@@ -141,7 +176,7 @@ if (empty($weekly_tools)) {
 }
 
 $show_checklist = $selected_technician !== '' && $selected_van !== '';
-$parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) : [];
+$parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assigned_parts, $existing_part_names))) : [];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -157,7 +192,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
     >
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-light">
+<body class="bg-light lg-theme">
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
@@ -202,8 +237,13 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                         <input class="form-control" id="checklist_date_display" name="checklist_date_display" placeholder="DD/MM/AAAA" value="<?php echo htmlspecialchars($selected_date_display, ENT_QUOTES); ?>" required>
                         <input type="hidden" id="checklist_date" name="checklist_date">
                         <input type="hidden" id="checklist_type" name="checklist_type" value="Daily">
+                        <input type="hidden" name="existing_checklist_id" value="<?php echo $existing_checklist ? (int) $existing_checklist['id'] : 0; ?>">
                     </div>
                 </div>
+
+                <?php if ($existing_checklist) : ?>
+                    <div class="alert alert-info mt-3 mb-0">Checklist diario ya guardado para esta fecha. Puedes reabrirlo y volver a guardar para actualizarlo.</div>
+                <?php endif; ?>
 
                 <hr class="my-4">
 
@@ -267,7 +307,8 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                                                 <?php foreach ($daily_tools as $index => $tool): ?>
                                                     <tr>
                                                         <td class="text-center">
-                                                            <input class="form-check-input" type="checkbox" id="tool-<?php echo $index; ?>" name="items[<?php echo $index; ?>][checked]" value="1">
+                                                            <?php $tool_key = strtolower('tool|' . $tool['name']); $tool_state = $existing_items_map[$tool_key] ?? null; ?>
+                                                            <input class="form-check-input" type="checkbox" id="tool-<?php echo $index; ?>" name="items[<?php echo $index; ?>][checked]" value="1" <?php echo ($tool_state && $tool_state['checked']) ? 'checked' : ''; ?>>
                                                         </td>
                                                         <td>
                                                             <label class="fw-semibold" for="tool-<?php echo $index; ?>">
@@ -278,7 +319,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                                                         </td>
                                                         <td class="text-end">
                                                             <?php if ((int) $tool['has_counter'] === 1) : ?>
-                                                                <input class="form-control form-control-sm quantity-input" type="number" min="0" name="items[<?php echo $index; ?>][quantity]" placeholder="0">
+                                                                <input class="form-control form-control-sm quantity-input" type="number" min="0" name="items[<?php echo $index; ?>][quantity]" placeholder="0" value="<?php echo ($tool_state && $tool_state['quantity'] !== null) ? (int) $tool_state['quantity'] : ''; ?>">
                                                             <?php endif; ?>
                                                         </td>
                                                     </tr>
@@ -319,7 +360,8 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
                                                     <?php $item_index = $index + count($daily_tools); ?>
                                                     <tr>
                                                         <td class="text-center">
-                                                            <input class="form-check-input" type="checkbox" id="part-<?php echo $item_index; ?>" name="items[<?php echo $item_index; ?>][checked]" value="1">
+                                                            <?php $part_key = strtolower('part|' . $part); $part_state = $existing_items_map[$part_key] ?? null; ?>
+                                                            <input class="form-check-input" type="checkbox" id="part-<?php echo $item_index; ?>" name="items[<?php echo $item_index; ?>][checked]" value="1" <?php echo ($part_state && $part_state['checked']) ? 'checked' : ''; ?>>
                                                         </td>
                                                         <td>
                                                             <label class="fw-semibold" for="part-<?php echo $item_index; ?>">
@@ -345,7 +387,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
 
                 <div class="mt-4">
                     <label class="form-label" for="notes">Notas</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Notas opcionales sobre la carga"></textarea>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Notas opcionales sobre la carga"><?php echo htmlspecialchars($existing_checklist['notes'] ?? '', ENT_QUOTES); ?></textarea>
                 </div>
 
                 <div class="d-flex flex-wrap gap-2 mt-4">

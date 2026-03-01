@@ -212,7 +212,7 @@ $tools = $tools_result ? $tools_result->fetch_all(MYSQLI_ASSOC) : [];
     >
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-light">
+<body class="bg-light lg-theme">
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
