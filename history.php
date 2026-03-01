@@ -69,7 +69,7 @@ foreach ($checklists as $checklist) {
 $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filters['date'] !== '';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -89,6 +89,7 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
             <p class="text-muted mb-0">Revisa cargas anteriores de herramientas y repuestos.</p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-md-0">
+            <a class="btn btn-outline-secondary" href="parts.php">Repuestos</a>
             <a class="btn btn-outline-secondary" href="manage_options.php">Administrar opciones</a>
             <a class="btn btn-outline-primary" href="index.php">Crear checklist</a>
         </div>

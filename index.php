@@ -144,7 +144,7 @@ $show_checklist = $selected_technician !== '' && $selected_van !== '';
 $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) : [];
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -165,6 +165,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique($assigned_parts)) :
             <p class="text-muted mb-0">Registra herramientas y repuestos que los técnicos llevan en cada salida.</p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-md-0">
+            <a class="btn btn-outline-secondary" href="parts.php">Repuestos</a>
             <a class="btn btn-outline-secondary" href="manage_options.php">Administrar opciones</a>
             <a class="btn btn-outline-primary" href="history.php">Ver listas anteriores</a>
         </div>

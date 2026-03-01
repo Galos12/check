@@ -2,13 +2,13 @@
 require_once 'config.php';
 
 $message = '';
+$error = '';
+$db = null;
 
 try {
     $db = get_db_connection();
-} catch (Throwable $error) {
-    http_response_code(500);
-    echo 'Unable to connect to the database.';
-    exit;
+} catch (Throwable $exception) {
+    $error = 'No se pudo conectar con la base de datos. Verifica la configuración en config.php.';
 }
 
 function table_exists(mysqli $db, string $table): bool
@@ -41,7 +41,13 @@ function ensure_manage_schema(mysqli $db): void
 {
     $db->query('CREATE TABLE IF NOT EXISTS technicians (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) NOT NULL UNIQUE)');
     $db->query('CREATE TABLE IF NOT EXISTS vans (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) NOT NULL UNIQUE)');
-    $db->query('CREATE TABLE IF NOT EXISTS parts_library (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(150) NOT NULL UNIQUE)');
+    $db->query("CREATE TABLE IF NOT EXISTS parts_library (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(150) NOT NULL,
+        part_type VARCHAR(150) NOT NULL DEFAULT '',
+        stock INT NOT NULL DEFAULT 0,
+        UNIQUE KEY uniq_part_name_type (name, part_type)
+    )");
     $db->query('CREATE TABLE IF NOT EXISTS tools_library (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(150) NOT NULL UNIQUE, has_counter TINYINT(1) NOT NULL DEFAULT 0, is_daily TINYINT(1) NOT NULL DEFAULT 0, is_weekly TINYINT(1) NOT NULL DEFAULT 0)');
     $db->query('CREATE TABLE IF NOT EXISTS technician_part_assignments (id INT AUTO_INCREMENT PRIMARY KEY, technician_id INT NOT NULL, part_id INT NOT NULL, assigned_date DATE NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
 
@@ -54,11 +60,24 @@ function ensure_manage_schema(mysqli $db): void
     if (!column_exists($db, 'tools_library', 'is_weekly')) {
         $db->query('ALTER TABLE tools_library ADD COLUMN is_weekly TINYINT(1) NOT NULL DEFAULT 0');
     }
+    if (!column_exists($db, 'parts_library', 'part_type')) {
+        $db->query("ALTER TABLE parts_library ADD COLUMN part_type VARCHAR(150) NOT NULL DEFAULT ''");
+    }
+    if (!column_exists($db, 'parts_library', 'stock')) {
+        $db->query('ALTER TABLE parts_library ADD COLUMN stock INT NOT NULL DEFAULT 0');
+    }
 }
 
-ensure_manage_schema($db);
+$technicians = [];
+$vans = [];
+$parts = [];
+$tools = [];
+$assignments = [];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($db instanceof mysqli) {
+    ensure_manage_schema($db);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $value = trim($_POST['value'] ?? '');
 
@@ -67,8 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'remove_technician' => ['table' => 'technicians', 'column' => 'name'],
         'add_van' => ['table' => 'vans', 'column' => 'name'],
         'remove_van' => ['table' => 'vans', 'column' => 'name'],
-        'add_part' => ['table' => 'parts_library', 'column' => 'name'],
-        'remove_part' => ['table' => 'parts_library', 'column' => 'name'],
         'add_tool' => ['table' => 'tools_library', 'column' => 'name'],
         'remove_tool' => ['table' => 'tools_library', 'column' => 'name'],
     ];
@@ -149,38 +166,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$technicians_result = $db->query('SELECT id, name FROM technicians ORDER BY name');
+    $technicians_result = $db->query('SELECT id, name FROM technicians ORDER BY name');
 $technicians = $technicians_result ? $technicians_result->fetch_all(MYSQLI_ASSOC) : [];
 
-$vans_result = $db->query('SELECT name FROM vans ORDER BY name');
+    $vans_result = $db->query('SELECT name FROM vans ORDER BY name');
 $vans = $vans_result ? $vans_result->fetch_all(MYSQLI_ASSOC) : [];
 
-$parts_result = $db->query('SELECT id, name FROM parts_library ORDER BY name');
+    $parts_result = $db->query('SELECT id, name, part_type, stock FROM parts_library ORDER BY name');
 $parts = $parts_result ? $parts_result->fetch_all(MYSQLI_ASSOC) : [];
 
-$tools_result = $db->query('SELECT id, name, has_counter, is_daily, is_weekly FROM tools_library ORDER BY name');
+    $tools_result = $db->query('SELECT id, name, has_counter, is_daily, is_weekly FROM tools_library ORDER BY name');
 $tools = $tools_result ? $tools_result->fetch_all(MYSQLI_ASSOC) : [];
 
-$assignments_result = $db->query(
+    $assignments_result = $db->query(
     'SELECT tpa.technician_id, tpa.assigned_date, p.id AS part_id, p.name AS part_name
      FROM technician_part_assignments tpa
      JOIN parts_library p ON p.id = tpa.part_id
      ORDER BY tpa.assigned_date DESC, p.name'
 );
-$assignments_raw = $assignments_result ? $assignments_result->fetch_all(MYSQLI_ASSOC) : [];
+    $assignments_raw = $assignments_result ? $assignments_result->fetch_all(MYSQLI_ASSOC) : [];
 
-$assignments = [];
-foreach ($assignments_raw as $row) {
-    $tech_id = (int) $row['technician_id'];
-    $date_key = (new DateTime($row['assigned_date']))->format('d/m/Y');
-    $assignments[$tech_id]['dates'][$date_key][] = [
-        'id' => (int) $row['part_id'],
-        'name' => $row['part_name'],
-    ];
+    $assignments = [];
+    foreach ($assignments_raw as $row) {
+        $tech_id = (int) $row['technician_id'];
+        $date_key = (new DateTime($row['assigned_date']))->format('d/m/Y');
+        $assignments[$tech_id]['dates'][$date_key][] = [
+            'id' => (int) $row['part_id'],
+            'name' => $row['part_name'],
+        ];
+    }
+
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -191,6 +210,7 @@ foreach ($assignments_raw as $row) {
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
         crossorigin="anonymous"
     >
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-light">
 <div class="container py-5">
@@ -200,6 +220,7 @@ foreach ($assignments_raw as $row) {
             <p class="text-muted mb-0">Actualiza técnicos, vans, repuestos y herramientas disponibles.</p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-md-0">
+            <a class="btn btn-outline-secondary" href="parts.php">Repuestos</a>
             <a class="btn btn-outline-secondary" href="index.php">Volver al checklist</a>
             <a class="btn btn-outline-primary" href="history.php">Ver historial</a>
         </div>
@@ -207,6 +228,10 @@ foreach ($assignments_raw as $row) {
 
     <?php if ($message !== '') : ?>
         <div class="alert alert-success"><?php echo htmlspecialchars($message, ENT_QUOTES); ?></div>
+    <?php endif; ?>
+
+    <?php if ($error !== '') : ?>
+        <div class="alert alert-danger"><?php echo htmlspecialchars($error, ENT_QUOTES); ?></div>
     <?php endif; ?>
 
     <div class="row g-4">
@@ -264,24 +289,9 @@ foreach ($assignments_raw as $row) {
         <div class="col-lg-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="h5">Repuestos diarios</h2>
-                    <form class="d-flex gap-2 mb-3" method="post">
-                        <input type="hidden" name="action" value="add_part">
-                        <input class="form-control" name="value" placeholder="Agregar repuesto" required>
-                        <button class="btn btn-primary" type="submit">Agregar</button>
-                    </form>
-                    <ul class="list-group scroll-list">
-                        <?php foreach ($parts as $part) : ?>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <?php echo htmlspecialchars($part['name'], ENT_QUOTES); ?>
-                                <form method="post">
-                                    <input type="hidden" name="action" value="remove_part">
-                                    <input type="hidden" name="value" value="<?php echo htmlspecialchars($part['name'], ENT_QUOTES); ?>">
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Quitar</button>
-                                </form>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+                    <h2 class="h5">Sección de Repuestos</h2>
+                    <p class="text-muted">Administra el inventario completo desde la sección <strong>Repuestos</strong>, cargando Excel y buscando por nombre/tipo/stock.</p>
+                    <a class="btn btn-primary" href="parts.php">Ir a Repuestos</a>
                 </div>
             </div>
         </div>
@@ -375,21 +385,24 @@ foreach ($assignments_raw as $row) {
                         <label class="form-label" for="assigned_date">Fecha de asignación (DD/MM/AAAA)</label>
                         <input class="form-control" id="assigned_date" name="assigned_date" placeholder="DD/MM/AAAA" required>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="parts_modal_search">Buscar repuesto para asignar</label>
+                        <input class="form-control" id="parts_modal_search" placeholder="Escribe nombre del repuesto...">
+                    </div>
                     <div class="table-responsive modal-scroll-table">
                         <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Stock</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
                             <tbody>
-                                <?php foreach ($parts as $part) : ?>
-                                    <tr>
-                                        <td class="text-center" style="width: 32px;">
-                                            <input class="form-check-input assign-part-checkbox" type="checkbox" id="part-<?php echo (int) $part['id']; ?>" name="part_ids[]" value="<?php echo (int) $part['id']; ?>">
-                                        </td>
-                                        <td>
-                                            <label class="form-check-label" for="part-<?php echo (int) $part['id']; ?>">
-                                                <?php echo htmlspecialchars($part['name'], ENT_QUOTES); ?>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                <tr>
+                                    <td colspan="4" class="text-muted text-center py-4">Empieza a escribir para mostrar repuestos.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -416,7 +429,11 @@ const assignTechName = document.getElementById('assignTechName');
 const assignTechId = document.getElementById('assignTechId');
 const assignedDateInput = document.getElementById('assigned_date');
 const assignmentHistory = document.getElementById('assignmentHistory');
+const partsSearchInput = document.getElementById('parts_modal_search');
+const modalTableBody = document.querySelector('#assignPartsModal tbody');
+const modalForm = document.querySelector('#assignPartsModal form');
 const assignments = <?php echo json_encode($assignments, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+const partsCatalog = <?php echo json_encode($parts, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
 
 const formatToday = () => {
     const today = new Date();
@@ -442,9 +459,47 @@ const renderHistory = (techId) => {
 const updateCheckedParts = (techId, dateValue) => {
     const selected = assignments[techId]?.dates?.[dateValue] ?? [];
     const selectedIds = new Set(selected.map((part) => String(part.id)));
-    document.querySelectorAll('.assign-part-checkbox').forEach((checkbox) => {
-        checkbox.checked = selectedIds.has(checkbox.value);
+
+    modalForm.querySelectorAll('input[name="part_ids[]"]').forEach((input) => input.remove());
+    selectedIds.forEach((id) => {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'part_ids[]';
+        hidden.value = id;
+        modalForm.appendChild(hidden);
     });
+};
+
+const renderPartsRows = (term = '') => {
+    const normalized = term.trim().toLowerCase();
+    if (!normalized) {
+        modalTableBody.innerHTML = '<tr><td colspan="4" class="text-muted text-center py-4">Empieza a escribir para mostrar repuestos.</td></tr>';
+        return;
+    }
+
+    const visible = partsCatalog.filter((part) => String(part.name).toLowerCase().includes(normalized));
+    if (!visible.length) {
+        modalTableBody.innerHTML = '<tr><td colspan="4" class="text-muted text-center py-4">Sin coincidencias.</td></tr>';
+        return;
+    }
+
+    const selectedIds = new Set(Array.from(modalForm.querySelectorAll('input[name="part_ids[]"]')).map((input) => input.value));
+
+    modalTableBody.innerHTML = visible.map((part) => {
+        const isAssigned = selectedIds.has(String(part.id));
+        return `
+            <tr>
+                <td>${part.name}</td>
+                <td>${part.part_type || '-'}</td>
+                <td>${part.stock}</td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm ${isAssigned ? 'btn-success' : 'btn-outline-primary'} assign-part-btn" data-part-id="${part.id}">
+                        ${isAssigned ? 'Asignado' : 'Asignar'}
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 };
 
 assignModal.addEventListener('show.bs.modal', (event) => {
@@ -455,10 +510,37 @@ assignModal.addEventListener('show.bs.modal', (event) => {
     assignedDateInput.value = formatToday();
     renderHistory(techId);
     updateCheckedParts(techId, assignedDateInput.value);
+    renderPartsRows(partsSearchInput.value);
 });
 
 assignedDateInput.addEventListener('change', () => {
     updateCheckedParts(assignTechId.value, assignedDateInput.value);
+    renderPartsRows(partsSearchInput.value);
+});
+
+partsSearchInput.addEventListener('input', () => {
+    renderPartsRows(partsSearchInput.value);
+});
+
+modalTableBody.addEventListener('click', (event) => {
+    const button = event.target.closest('.assign-part-btn');
+    if (!button) {
+        return;
+    }
+
+    const partId = button.getAttribute('data-part-id');
+    const existing = Array.from(modalForm.querySelectorAll('input[name="part_ids[]"]')).find((input) => input.value === partId);
+    if (existing) {
+        existing.remove();
+    } else {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'part_ids[]';
+        hidden.value = partId;
+        modalForm.appendChild(hidden);
+    }
+
+    renderPartsRows(partsSearchInput.value);
 });
 </script>
 </body>

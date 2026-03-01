@@ -33,7 +33,10 @@ CREATE TABLE IF NOT EXISTS vans (
 
 CREATE TABLE IF NOT EXISTS parts_library (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(150) NOT NULL UNIQUE
+    name VARCHAR(150) NOT NULL,
+    part_type VARCHAR(150) NOT NULL DEFAULT '',
+    stock INT NOT NULL DEFAULT 0,
+    UNIQUE KEY uniq_part_name_type (name, part_type)
 );
 
 CREATE TABLE IF NOT EXISTS tools_library (

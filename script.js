@@ -51,7 +51,7 @@ const createItemCard = ({ name, type, has_counter: hasCounter, removable = true,
     const removeButton = document.createElement('button');
     removeButton.className = 'btn btn-sm btn-link text-danger remove-item-btn';
     removeButton.type = 'button';
-    removeButton.textContent = 'Remove';
+    removeButton.textContent = 'Quitar';
 
     const checkboxCell = document.createElement('td');
     checkboxCell.className = 'text-center';

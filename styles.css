@@ -39,3 +39,8 @@
     max-height: 240px;
     overflow-y: auto;
 }
+
+.parts-results-table {
+    max-height: 360px;
+    overflow-y: auto;
+}
