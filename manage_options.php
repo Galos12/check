@@ -11,6 +11,53 @@ try {
     exit;
 }
 
+function table_exists(mysqli $db, string $table): bool
+{
+    $stmt = $db->prepare('SELECT 1 FROM information_schema.tables WHERE table_schema = ? AND table_name = ? LIMIT 1');
+    if (!$stmt) {
+        return false;
+    }
+    $schema = DB_NAME;
+    $stmt->bind_param('ss', $schema, $table);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result !== false && $result->num_rows > 0;
+}
+
+function column_exists(mysqli $db, string $table, string $column): bool
+{
+    $stmt = $db->prepare('SELECT 1 FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ? LIMIT 1');
+    if (!$stmt) {
+        return false;
+    }
+    $schema = DB_NAME;
+    $stmt->bind_param('sss', $schema, $table, $column);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result !== false && $result->num_rows > 0;
+}
+
+function ensure_manage_schema(mysqli $db): void
+{
+    $db->query('CREATE TABLE IF NOT EXISTS technicians (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) NOT NULL UNIQUE)');
+    $db->query('CREATE TABLE IF NOT EXISTS vans (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) NOT NULL UNIQUE)');
+    $db->query('CREATE TABLE IF NOT EXISTS parts_library (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(150) NOT NULL UNIQUE)');
+    $db->query('CREATE TABLE IF NOT EXISTS tools_library (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(150) NOT NULL UNIQUE, has_counter TINYINT(1) NOT NULL DEFAULT 0, is_daily TINYINT(1) NOT NULL DEFAULT 0, is_weekly TINYINT(1) NOT NULL DEFAULT 0)');
+    $db->query('CREATE TABLE IF NOT EXISTS technician_part_assignments (id INT AUTO_INCREMENT PRIMARY KEY, technician_id INT NOT NULL, part_id INT NOT NULL, assigned_date DATE NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
+
+    if (!column_exists($db, 'tools_library', 'has_counter')) {
+        $db->query('ALTER TABLE tools_library ADD COLUMN has_counter TINYINT(1) NOT NULL DEFAULT 0');
+    }
+    if (!column_exists($db, 'tools_library', 'is_daily')) {
+        $db->query('ALTER TABLE tools_library ADD COLUMN is_daily TINYINT(1) NOT NULL DEFAULT 0');
+    }
+    if (!column_exists($db, 'tools_library', 'is_weekly')) {
+        $db->query('ALTER TABLE tools_library ADD COLUMN is_weekly TINYINT(1) NOT NULL DEFAULT 0');
+    }
+}
+
+ensure_manage_schema($db);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $value = trim($_POST['value'] ?? '');
@@ -103,28 +150,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $technicians_result = $db->query('SELECT id, name FROM technicians ORDER BY name');
-if ($technicians_result === false) {
-    throw new RuntimeException($db->error);
-}
-$technicians = $technicians_result->fetch_all(MYSQLI_ASSOC);
+$technicians = $technicians_result ? $technicians_result->fetch_all(MYSQLI_ASSOC) : [];
 
 $vans_result = $db->query('SELECT name FROM vans ORDER BY name');
-if ($vans_result === false) {
-    throw new RuntimeException($db->error);
-}
-$vans = $vans_result->fetch_all(MYSQLI_ASSOC);
+$vans = $vans_result ? $vans_result->fetch_all(MYSQLI_ASSOC) : [];
 
 $parts_result = $db->query('SELECT id, name FROM parts_library ORDER BY name');
-if ($parts_result === false) {
-    throw new RuntimeException($db->error);
-}
-$parts = $parts_result->fetch_all(MYSQLI_ASSOC);
+$parts = $parts_result ? $parts_result->fetch_all(MYSQLI_ASSOC) : [];
 
 $tools_result = $db->query('SELECT id, name, has_counter, is_daily, is_weekly FROM tools_library ORDER BY name');
-if ($tools_result === false) {
-    throw new RuntimeException($db->error);
-}
-$tools = $tools_result->fetch_all(MYSQLI_ASSOC);
+$tools = $tools_result ? $tools_result->fetch_all(MYSQLI_ASSOC) : [];
 
 $assignments_result = $db->query(
     'SELECT tpa.technician_id, tpa.assigned_date, p.id AS part_id, p.name AS part_name
@@ -132,10 +167,7 @@ $assignments_result = $db->query(
      JOIN parts_library p ON p.id = tpa.part_id
      ORDER BY tpa.assigned_date DESC, p.name'
 );
-if ($assignments_result === false) {
-    throw new RuntimeException($db->error);
-}
-$assignments_raw = $assignments_result->fetch_all(MYSQLI_ASSOC);
+$assignments_raw = $assignments_result ? $assignments_result->fetch_all(MYSQLI_ASSOC) : [];
 
 $assignments = [];
 foreach ($assignments_raw as $row) {
