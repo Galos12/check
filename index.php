@@ -264,6 +264,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Lista de Verificación HVAC</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="lg-theme">
 <div class="container py-5">

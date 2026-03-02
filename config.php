@@ -1,4 +1,19 @@
 <?php
+
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool
+    {
+        return $needle === '' || strpos($haystack, $needle) !== false;
+    }
+}
+
+if (!function_exists('str_starts_with')) {
+    function str_starts_with(string $haystack, string $needle): bool
+    {
+        return strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
+
 // Update these values with your MySQL credentials.
 const DB_HOST = '127.0.0.1';
 const DB_NAME = 'hvac_checklists';

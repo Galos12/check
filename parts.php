@@ -178,6 +178,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sección de Repuestos</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="lg-theme">
 <div class="container py-5">
