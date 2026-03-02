@@ -53,3 +53,10 @@ main, .page-shell{background:#fff}
 .selection-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#111827;color:#fff;padding:.7rem 1rem;border-radius:10px;z-index:1000;box-shadow:0 8px 20px rgba(0,0,0,.25)}
 .info-grid{display:grid;grid-template-columns:minmax(90px,150px) 1fr;gap:.35rem .75rem}.info-grid dt{font-weight:600}.info-grid dd{margin:0;word-break:break-word}
 @media(max-width:900px){.info-grid{grid-template-columns:1fr}}
+
+
+.estado-header{display:flex;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap}
+.revision-nav{display:flex;align-items:center;gap:.5rem}
+.revision-meta{font-size:.9rem;color:#4b5563;font-weight:600}
+.btn.is-disabled{opacity:.4;pointer-events:none}
+.estado-extra{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem}

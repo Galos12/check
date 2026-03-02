@@ -1,7 +1,7 @@
 <?php
 require_once 'config.php';
 
-$current_page = 'view_checklist';
+$current_page = 'history';
 
 $checklist_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($checklist_id <= 0) {
@@ -42,7 +42,7 @@ if (!$checklist) {
 $item_stmt = $db->prepare('SELECT item_name, item_type, is_checked, quantity FROM checklist_items WHERE checklist_id = ? ORDER BY item_type, item_name');
 $item_stmt->bind_param('i', $checklist_id);
 $item_stmt->execute();
-$items = ($item_stmt->get_result())->fetch_all(MYSQLI_ASSOC);
+$items_current = ($item_stmt->get_result())->fetch_all(MYSQLI_ASSOC);
 
 $revision_stmt = $db->prepare('SELECT id, revision_number, saved_at FROM checklist_revisions WHERE checklist_id = ? ORDER BY revision_number DESC');
 $revision_stmt->bind_param('i', $checklist_id);
@@ -51,7 +51,7 @@ $revisions = ($revision_stmt->get_result())->fetch_all(MYSQLI_ASSOC);
 
 $revision_items = [];
 if ($revisions) {
-    $ids = array_map(fn($r) => (int) $r['id'], $revisions);
+    $ids = array_map(static fn($r) => (int) $r['id'], $revisions);
     $ph = implode(',', array_fill(0, count($ids), '?'));
     $types = str_repeat('i', count($ids));
     $stmt = $db->prepare("SELECT revision_id, item_name, item_type, is_checked, quantity FROM checklist_revision_items WHERE revision_id IN ($ph) ORDER BY item_type, item_name");
@@ -63,8 +63,37 @@ if ($revisions) {
     }
 }
 
+$selected_revision_id = isset($_GET['rev']) ? (int) $_GET['rev'] : 0;
+$selected_revision_index = 0;
+if ($revisions) {
+    if ($selected_revision_id <= 0) {
+        $selected_revision_id = (int) $revisions[0]['id'];
+    }
+    foreach ($revisions as $index => $revision) {
+        if ((int) $revision['id'] === $selected_revision_id) {
+            $selected_revision_index = $index;
+            break;
+        }
+    }
+}
+
+$selected_revision = $revisions[$selected_revision_index] ?? null;
+$display_items = $selected_revision ? ($revision_items[(int) $selected_revision['id']] ?? $items_current) : $items_current;
+
+$prev_revision = $revisions[$selected_revision_index + 1] ?? null; // older
+$next_revision = $selected_revision_index > 0 ? $revisions[$selected_revision_index - 1] : null; // newer
+
 $checklist_date = new DateTime($checklist['checklist_date']);
 $created_at = new DateTime($checklist['created_at']);
+
+$revision_badge = 'Original';
+$revision_time = $created_at->format('d/m/Y H:i');
+if ($selected_revision) {
+    $revision_number = (int) $selected_revision['revision_number'];
+    $revision_badge = $revision_number <= 1 ? 'Original' : 'Modificación #' . $revision_number;
+    $revision_time = (new DateTime($selected_revision['saved_at']))->format('d/m/Y H:i');
+}
+
 $assigned_parts = [];
 $technician_stmt = $db->prepare('SELECT id FROM technicians WHERE name = ?');
 $technician_stmt->bind_param('s', $checklist['technician_name']);
@@ -77,7 +106,7 @@ if ($technician) {
     $assigned_stmt->bind_param('is', $tech_id, $date_iso);
     $assigned_stmt->execute();
     $assigned_rows = ($assigned_stmt->get_result())->fetch_all(MYSQLI_ASSOC);
-    $assigned_parts = array_map(fn($r) => $r['name'], $assigned_rows);
+    $assigned_parts = array_map(static fn($r) => $r['name'], $assigned_rows);
 }
 ?>
 <!DOCTYPE html>
@@ -103,67 +132,82 @@ if ($technician) {
             <a class="<?php echo $current_page === 'manage_options' ? 'active' : ''; ?>" href="manage_options.php">Administración</a>
         </nav>
     </header>
+
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div><h1 class="display-6 fw-bold">Detalle del checklist</h1><p class="text-muted">Registro del <?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?>.</p></div>
+        <div>
+            <h1 class="display-6 fw-bold">Detalle del checklist</h1>
+            <p class="text-muted">Registro del <?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?>.</p>
+        </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-4">
-            <div class="card shadow-sm lg-card"><div class="card-body"><h2 class="h5">Información</h2><dl class="row mb-0 info-grid">
-                <dt class="col-5">Técnico</dt><dd class="col-7"><?php echo htmlspecialchars($checklist['technician_name'], ENT_QUOTES); ?></dd>
-                <dt class="col-5">Van</dt><dd class="col-7"><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></dd>
-                <dt class="col-5">Fecha</dt><dd class="col-7"><?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?></dd>
-                <dt class="col-5">Tipo</dt><dd class="col-7"><?php echo ($checklist['checklist_type'] ?? 'Daily') === 'Weekly' ? 'Semanal' : 'Diario'; ?></dd>
-                <dt class="col-5">Creado</dt><dd class="col-7"><?php echo htmlspecialchars($created_at->format('d/m/Y H:i'), ENT_QUOTES); ?></dd>
-                <dt class="col-5">Modificado</dt><dd class="col-7"><?php echo count($revisions) > 1 ? 'Sí' : 'No'; ?></dd>
-                <dt class="col-5">Combustible</dt><dd class="col-7"><?php echo isset($checklist['fuel_level']) ? (int) $checklist['fuel_level'] . '%' : '-'; ?></dd>
-                <dt class="col-5">Aceite</dt><dd class="col-7"><?php echo isset($checklist['oil_level']) ? (int) $checklist['oil_level'] . '%' : '-'; ?></dd>
-                <dt class="col-5">Refrigerante</dt><dd class="col-7"><?php echo htmlspecialchars($checklist['refrigerant_level'] ?? '-', ENT_QUOTES); ?></dd>
-            </dl></div></div>
-        </div>
-        <div class="col-lg-8">
-            <div class="card shadow-sm lg-card"><div class="card-body"><h2 class="h5">Estado actual</h2>
-                <div class="table-responsive"><table class="table align-middle lg-table"><thead><tr><th>Ítem</th><th>Tipo</th><th>Cant.</th><th>Asignado</th><th>Estado</th></tr></thead><tbody>
-                <?php foreach ($items as $item) : ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($item['item_name'], ENT_QUOTES); ?></td>
-                        <td><?php echo htmlspecialchars($item['item_type'], ENT_QUOTES); ?></td>
-                        <td><?php echo $item['quantity'] !== null ? (int) $item['quantity'] : '-'; ?></td>
-                        <td><?php if ($item['item_type'] === 'Part' && in_array($item['item_name'], $assigned_parts, true)) { echo '<span class="badge text-bg-info">Asignado</span>'; } elseif ($item['item_type'] === 'Part') { echo 'No'; } else { echo '-'; } ?></td>
-                        <td><?php echo (int) $item['is_checked'] === 1 ? '<span class="badge text-bg-success">Llevado</span>' : '<span class="badge text-bg-secondary">No llevado</span>'; ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody></table></div>
-            </div></div>
-        </div>
-    </div>
-
-    <div class="card shadow-sm mt-4 lg-card">
-        <div class="card-body">
-            <h2 class="h5">Historial de modificaciones</h2>
-            <?php if (empty($revisions)) : ?>
-                <p class="text-muted">Sin revisiones guardadas.</p>
-            <?php else : ?>
-                <div class="history-groups">
-                    <?php foreach ($revisions as $revision) : $rid = (int) $revision['id']; $saved = new DateTime($revision['saved_at']); ?>
-                        <details class="history-group">
-                            <summary>Revisión #<?php echo (int) $revision['revision_number']; ?> · <?php echo htmlspecialchars($saved->format('d/m/Y H:i'), ENT_QUOTES); ?></summary>
-                            <div class="group-body">
-                                    <div class="table-responsive"><table class="table table-sm align-middle"><thead><tr><th>Ítem</th><th>Tipo</th><th>Cant.</th><th>Estado</th></tr></thead><tbody>
-                                    <?php foreach (($revision_items[$rid] ?? []) as $rev_item) : ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($rev_item['item_name'], ENT_QUOTES); ?></td>
-                                            <td><?php echo htmlspecialchars($rev_item['item_type'], ENT_QUOTES); ?></td>
-                                            <td><?php echo $rev_item['quantity'] !== null ? (int) $rev_item['quantity'] : '-'; ?></td>
-                                            <td><?php echo (int) $rev_item['is_checked'] === 1 ? 'Llevado' : 'No llevado'; ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                    </tbody></table></div>
-                                </div>
-                        </details>
-                    <?php endforeach; ?>
+            <div class="card shadow-sm lg-card">
+                <div class="card-body">
+                    <h2 class="h5">Información</h2>
+                    <dl class="row mb-0 info-grid">
+                        <dt>Técnico</dt><dd><?php echo htmlspecialchars($checklist['technician_name'], ENT_QUOTES); ?></dd>
+                        <dt>Van</dt><dd><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></dd>
+                        <dt>Fecha</dt><dd><?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?></dd>
+                        <dt>Tipo</dt><dd><?php echo ($checklist['checklist_type'] ?? 'Daily') === 'Weekly' ? 'Semanal' : 'Diario'; ?></dd>
+                        <dt>Creado</dt><dd><?php echo htmlspecialchars($created_at->format('d/m/Y H:i'), ENT_QUOTES); ?></dd>
+                    </dl>
                 </div>
-            <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm lg-card">
+                <div class="card-body">
+                    <div class="estado-header">
+                        <h2 class="h5 mb-0">Estado actual</h2>
+                        <div class="revision-nav">
+                            <a class="btn btn-sm btn-outline-secondary <?php echo $prev_revision ? '' : 'is-disabled'; ?>" href="<?php echo $prev_revision ? 'view_checklist.php?id=' . $checklist_id . '&rev=' . (int) $prev_revision['id'] : '#'; ?>" aria-disabled="<?php echo $prev_revision ? 'false' : 'true'; ?>">←</a>
+                            <span class="revision-meta"><?php echo htmlspecialchars($revision_badge, ENT_QUOTES); ?> · <?php echo htmlspecialchars($revision_time, ENT_QUOTES); ?></span>
+                            <a class="btn btn-sm btn-outline-secondary <?php echo $next_revision ? '' : 'is-disabled'; ?>" href="<?php echo $next_revision ? 'view_checklist.php?id=' . $checklist_id . '&rev=' . (int) $next_revision['id'] : '#'; ?>" aria-disabled="<?php echo $next_revision ? 'false' : 'true'; ?>">→</a>
+                        </div>
+                    </div>
+
+                    <div class="estado-extra">
+                        <span class="badge text-bg-info">Combustible: <?php echo isset($checklist['fuel_level']) ? (int) $checklist['fuel_level'] . '%' : '-'; ?></span>
+                        <span class="badge text-bg-info">Aceite: <?php echo isset($checklist['oil_level']) ? (int) $checklist['oil_level'] . '%' : '-'; ?></span>
+                        <span class="badge text-bg-info">Refrigerante: <?php echo htmlspecialchars($checklist['refrigerant_level'] ?? '-', ENT_QUOTES); ?></span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle lg-table">
+                            <thead>
+                                <tr>
+                                    <th>Ítem</th>
+                                    <th>Tipo</th>
+                                    <th>Cant.</th>
+                                    <th>Asignado</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($display_items as $item) : ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($item['item_name'], ENT_QUOTES); ?></td>
+                                        <td><?php echo htmlspecialchars($item['item_type'], ENT_QUOTES); ?></td>
+                                        <td><?php echo $item['quantity'] !== null ? (int) $item['quantity'] : '-'; ?></td>
+                                        <td>
+                                            <?php if ($item['item_type'] === 'Part' && in_array($item['item_name'], $assigned_parts, true)) : ?>
+                                                <span class="badge text-bg-info">Asignado</span>
+                                            <?php elseif ($item['item_type'] === 'Part') : ?>
+                                                No
+                                            <?php else : ?>
+                                                -
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?php echo (int) $item['is_checked'] === 1 ? '<span class="badge text-bg-success">Llevado</span>' : '<span class="badge text-bg-secondary">No llevado</span>'; ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
