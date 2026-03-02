@@ -156,6 +156,9 @@ if ($technician) {
                     <h3 class="h6 info-subtitle info-subtitle-van">Información de la van</h3>
                     <dl class="row mb-0 info-grid">
                         <dt>Van</dt><dd><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></dd>
+                        <dt>Combustible</dt><dd><?php echo isset($checklist['fuel_level']) ? (int) $checklist['fuel_level'] . '%' : '-'; ?></dd>
+                        <dt>Aceite</dt><dd><?php echo isset($checklist['oil_level']) ? (int) $checklist['oil_level'] . '%' : '-'; ?></dd>
+                        <dt>Refrigerante</dt><dd><?php echo htmlspecialchars($checklist['refrigerant_level'] ?? '-', ENT_QUOTES); ?></dd>
                     </dl>
                 </div>
             </div>
@@ -173,11 +176,7 @@ if ($technician) {
                         <a class="revision-arrow <?php echo $next_revision ? '' : 'is-disabled'; ?>" href="<?php echo $next_revision ? 'view_checklist.php?id=' . $checklist_id . '&rev=' . (int) $next_revision['id'] : '#'; ?>" aria-disabled="<?php echo $next_revision ? 'false' : 'true'; ?>" title="Revisión siguiente">→</a>
                     </div>
 
-                    <div class="estado-extra">
-                        <span class="badge text-bg-info">Combustible: <?php echo isset($checklist['fuel_level']) ? (int) $checklist['fuel_level'] . '%' : '-'; ?></span>
-                        <span class="badge text-bg-info">Aceite: <?php echo isset($checklist['oil_level']) ? (int) $checklist['oil_level'] . '%' : '-'; ?></span>
-                        <span class="badge text-bg-info">Refrigerante: <?php echo htmlspecialchars($checklist['refrigerant_level'] ?? '-', ENT_QUOTES); ?></span>
-                    </div>
+                    
 
                     <div class="table-responsive">
                         <table class="table align-middle lg-table">
@@ -211,6 +210,12 @@ if ($technician) {
                             </tbody>
                         </table>
                     </div>
+
+                    <div class="notes-block">
+                        <h3 class="h6 notes-title">Notas</h3>
+                        <p class="notes-content"><?php echo $checklist['notes'] !== null && trim($checklist['notes']) !== '' ? nl2br(htmlspecialchars($checklist['notes'], ENT_QUOTES)) : 'Sin notas.'; ?></p>
+                    </div>
+
                 </div>
             </div>
         </div>

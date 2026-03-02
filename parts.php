@@ -218,7 +218,7 @@ try {
                     <input class="form-control" type="file" id="parts_excel" name="parts_excel" accept=".xlsx,.csv" required>
                 </div>
                 <div class="col-md-4 d-grid">
-                    <button class="btn btn-primary" type="submit">Cargar inventario</button>
+                    <button class="btn btn-primary parts-upload-btn" type="submit">Cargar inventario</button>
                 </div>
             </form>
         </div>

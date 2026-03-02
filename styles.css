@@ -67,3 +67,7 @@ main, .page-shell{background:#fff}
 .info-subtitle-van{margin-top:.95rem;padding-top:.75rem;border-top:1px solid #eceff4}
 
 @media(max-width:700px){.revision-bar{grid-template-columns:36px 1fr 36px}.revision-meta{font-size:.82rem}.info-grid{grid-template-columns:1fr}}
+
+.parts-upload-btn{width:100%}
+@media(min-width:900px){.parts-upload-btn{width:auto;padding:.45rem .75rem;font-size:.88rem}}
+.notes-block{margin-top:1rem;padding-top:.8rem;border-top:1px solid #eceff4}.notes-title{margin:0 0 .4rem 0}.notes-content{margin:0;color:#374151;line-height:1.45}
