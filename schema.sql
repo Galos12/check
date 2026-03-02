@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS checklists (
     checklist_date DATE NOT NULL,
     checklist_type ENUM('Daily', 'Weekly') NOT NULL DEFAULT 'Daily',
     notes TEXT,
+    fuel_level TINYINT UNSIGNED NULL,
+    oil_level TINYINT UNSIGNED NULL,
+    refrigerant_level ENUM('Low','Mid','Full') NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

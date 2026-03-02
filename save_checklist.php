@@ -12,6 +12,9 @@ $checklist_date_input = trim($_POST['checklist_date'] ?? '');
 $checklist_date_display = trim($_POST['checklist_date_display'] ?? '');
 $checklist_type = trim($_POST['checklist_type'] ?? 'Daily');
 $notes = trim($_POST['notes'] ?? '');
+$fuel_level = isset($_POST['fuel_level']) ? max(0, min(100, (int) $_POST['fuel_level'])) : null;
+$oil_level = isset($_POST['oil_level']) ? max(0, min(100, (int) $_POST['oil_level'])) : null;
+$refrigerant_level = trim($_POST['refrigerant_level'] ?? '');
 $items = $_POST['items'] ?? [];
 $existing_checklist_id = (int) ($_POST['existing_checklist_id'] ?? 0);
 
@@ -31,6 +34,9 @@ if ($checklist_date === '') {
 
 if (!in_array($checklist_type, ['Daily', 'Weekly'], true)) {
     $checklist_type = 'Daily';
+}
+if (!in_array($refrigerant_level, ['Low', 'Mid', 'Full'], true)) {
+    $refrigerant_level = null;
 }
 
 $db = get_db_connection();
@@ -53,6 +59,10 @@ try {
         quantity INT NULL,
         FOREIGN KEY (revision_id) REFERENCES checklist_revisions(id) ON DELETE CASCADE
     )');
+
+    $db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS fuel_level TINYINT UNSIGNED NULL');
+    $db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS oil_level TINYINT UNSIGNED NULL');
+    $db->query("ALTER TABLE checklists ADD COLUMN IF NOT EXISTS refrigerant_level ENUM('Low','Mid','Full') NULL");
 
     $checklist_id = 0;
     if ($checklist_type === 'Daily') {
@@ -79,16 +89,16 @@ try {
     }
 
     if ($checklist_id > 0) {
-        $update_stmt = $db->prepare('UPDATE checklists SET notes = ?, van_name = ?, technician_name = ? WHERE id = ?');
-        $update_stmt->bind_param('sssi', $notes, $van_name, $technician_name, $checklist_id);
+        $update_stmt = $db->prepare('UPDATE checklists SET notes = ?, van_name = ?, technician_name = ?, fuel_level = ?, oil_level = ?, refrigerant_level = ? WHERE id = ?');
+        $update_stmt->bind_param('sssiisi', $notes, $van_name, $technician_name, $fuel_level, $oil_level, $refrigerant_level, $checklist_id);
         $update_stmt->execute();
 
         $delete_items_stmt = $db->prepare('DELETE FROM checklist_items WHERE checklist_id = ?');
         $delete_items_stmt->bind_param('i', $checklist_id);
         $delete_items_stmt->execute();
     } else {
-        $insert_stmt = $db->prepare('INSERT INTO checklists (technician_name, van_name, checklist_date, checklist_type, notes) VALUES (?, ?, ?, ?, ?)');
-        $insert_stmt->bind_param('sssss', $technician_name, $van_name, $checklist_date, $checklist_type, $notes);
+        $insert_stmt = $db->prepare('INSERT INTO checklists (technician_name, van_name, checklist_date, checklist_type, notes, fuel_level, oil_level, refrigerant_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $insert_stmt->bind_param('sssssiis', $technician_name, $van_name, $checklist_date, $checklist_type, $notes, $fuel_level, $oil_level, $refrigerant_level);
         $insert_stmt->execute();
         $checklist_id = (int) $db->insert_id;
     }

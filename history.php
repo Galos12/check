@@ -2,6 +2,9 @@
 require_once 'config.php';
 
 $db = get_db_connection();
+$db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS fuel_level TINYINT UNSIGNED NULL');
+$db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS oil_level TINYINT UNSIGNED NULL');
+$db->query("ALTER TABLE checklists ADD COLUMN IF NOT EXISTS refrigerant_level ENUM('Low','Mid','Full') NULL");
 $db->query('CREATE TABLE IF NOT EXISTS checklist_revisions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     checklist_id INT NOT NULL,
@@ -21,7 +24,7 @@ $filters = [
     'date' => trim($_GET['date'] ?? ''),
 ];
 
-$query = 'SELECT c.id, c.technician_name, c.van_name, c.checklist_date, c.checklist_type, c.created_at,
+$query = 'SELECT c.id, c.technician_name, c.van_name, c.checklist_date, c.checklist_type, c.created_at, c.fuel_level, c.oil_level, c.refrigerant_level,
           COALESCE(r.revision_count, 0) AS revision_count, r.last_saved_at
           FROM checklists c
           LEFT JOIN (
@@ -76,10 +79,9 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Historial de checklists</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-light lg-theme">
+<body class="lg-theme">
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
@@ -112,7 +114,7 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
                 <?php $render = function (array $items) { ?>
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 lg-table">
-                            <thead><tr><th>Fecha</th><th>Técnico</th><th>Van</th><th>Creado</th><th>Tipo</th><th>Modificado</th><th>Última edición</th><th></th></tr></thead>
+                            <thead><tr><th>Fecha</th><th>Técnico</th><th>Van</th><th>Comb.</th><th>Aceite</th><th>Ref.</th><th>Creado</th><th>Tipo</th><th>Modificado</th><th>Última edición</th><th></th></tr></thead>
                             <tbody>
                             <?php foreach ($items as $checklist) :
                                 $date = new DateTime($checklist['checklist_date']);
@@ -125,6 +127,9 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
                                     <td><?php echo htmlspecialchars($date->format('d/m/Y'), ENT_QUOTES); ?></td>
                                     <td><?php echo htmlspecialchars($checklist['technician_name'], ENT_QUOTES); ?></td>
                                     <td><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></td>
+                                    <td><?php echo isset($checklist['fuel_level']) ? (int) $checklist['fuel_level'] . '%' : '-'; ?></td>
+                                    <td><?php echo isset($checklist['oil_level']) ? (int) $checklist['oil_level'] . '%' : '-'; ?></td>
+                                    <td><?php echo htmlspecialchars($checklist['refrigerant_level'] ?? '-', ENT_QUOTES); ?></td>
                                     <td><?php echo htmlspecialchars($created->format('d/m/Y H:i'), ENT_QUOTES); ?></td>
                                     <td><?php echo htmlspecialchars($typeLabel, ENT_QUOTES); ?></td>
                                     <td><?php echo $modified ? '<span class="badge text-bg-warning">Sí</span>' : '<span class="badge text-bg-secondary">No</span>'; ?></td>
@@ -140,12 +145,11 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
                 <?php if ($has_filters) : ?>
                     <?php $render($checklists); ?>
                 <?php else : ?>
-                    <div class="accordion" id="checklist-history">
+                    <div class="history-groups">
                         <?php foreach ($grouped_checklists as $group_label => $group_items) : $group_id = 'group-' . preg_replace('/\s+/', '-', strtolower($group_label)); ?>
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="<?php echo $group_id; ?>-heading"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo $group_id; ?>"><?php echo htmlspecialchars($group_label, ENT_QUOTES); ?></button></h2>
-                                <div id="<?php echo $group_id; ?>" class="accordion-collapse collapse" data-bs-parent="#checklist-history"><div class="accordion-body"><?php $render($group_items); ?></div></div>
-                            </div>
+                            <details class="history-group">
+                                <summary><?php echo htmlspecialchars($group_label, ENT_QUOTES); ?></summary><div class="group-body"><?php $render($group_items); ?></div>
+                            </details>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
@@ -153,6 +157,5 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
         </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

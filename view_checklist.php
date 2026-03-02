@@ -8,6 +8,9 @@ if ($checklist_id <= 0) {
 }
 
 $db = get_db_connection();
+$db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS fuel_level TINYINT UNSIGNED NULL');
+$db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS oil_level TINYINT UNSIGNED NULL');
+$db->query("ALTER TABLE checklists ADD COLUMN IF NOT EXISTS refrigerant_level ENUM('Low','Mid','Full') NULL");
 $db->query('CREATE TABLE IF NOT EXISTS checklist_revisions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     checklist_id INT NOT NULL,
@@ -81,10 +84,9 @@ if ($technician) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Detalle del checklist</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-light lg-theme">
+<body class="lg-theme">
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div><h1 class="display-6 fw-bold">Detalle del checklist</h1><p class="text-muted mb-0">Registro del <?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?>.</p></div>
@@ -100,6 +102,9 @@ if ($technician) {
                 <dt class="col-5">Tipo</dt><dd class="col-7"><?php echo ($checklist['checklist_type'] ?? 'Daily') === 'Weekly' ? 'Semanal' : 'Diario'; ?></dd>
                 <dt class="col-5">Creado</dt><dd class="col-7"><?php echo htmlspecialchars($created_at->format('d/m/Y H:i'), ENT_QUOTES); ?></dd>
                 <dt class="col-5">Modificado</dt><dd class="col-7"><?php echo count($revisions) > 1 ? 'Sí' : 'No'; ?></dd>
+                <dt class="col-5">Combustible</dt><dd class="col-7"><?php echo isset($checklist['fuel_level']) ? (int) $checklist['fuel_level'] . '%' : '-'; ?></dd>
+                <dt class="col-5">Aceite</dt><dd class="col-7"><?php echo isset($checklist['oil_level']) ? (int) $checklist['oil_level'] . '%' : '-'; ?></dd>
+                <dt class="col-5">Refrigerante</dt><dd class="col-7"><?php echo htmlspecialchars($checklist['refrigerant_level'] ?? '-', ENT_QUOTES); ?></dd>
             </dl></div></div>
         </div>
         <div class="col-lg-8">
@@ -125,16 +130,11 @@ if ($technician) {
             <?php if (empty($revisions)) : ?>
                 <p class="text-muted mb-0">Sin revisiones guardadas.</p>
             <?php else : ?>
-                <div class="accordion" id="revisionAccordion">
+                <div class="history-groups">
                     <?php foreach ($revisions as $revision) : $rid = (int) $revision['id']; $saved = new DateTime($revision['saved_at']); ?>
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="rev-<?php echo $rid; ?>-h">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#rev-<?php echo $rid; ?>">
-                                    Revisión #<?php echo (int) $revision['revision_number']; ?> · <?php echo htmlspecialchars($saved->format('d/m/Y H:i'), ENT_QUOTES); ?>
-                                </button>
-                            </h2>
-                            <div id="rev-<?php echo $rid; ?>" class="accordion-collapse collapse" data-bs-parent="#revisionAccordion">
-                                <div class="accordion-body">
+                        <details class="history-group">
+                            <summary>Revisión #<?php echo (int) $revision['revision_number']; ?> · <?php echo htmlspecialchars($saved->format('d/m/Y H:i'), ENT_QUOTES); ?></summary>
+                            <div class="group-body">
                                     <div class="table-responsive"><table class="table table-sm align-middle"><thead><tr><th>Ítem</th><th>Tipo</th><th>Cant.</th><th>Estado</th></tr></thead><tbody>
                                     <?php foreach (($revision_items[$rid] ?? []) as $rev_item) : ?>
                                         <tr>
@@ -146,14 +146,12 @@ if ($technician) {
                                     <?php endforeach; ?>
                                     </tbody></table></div>
                                 </div>
-                            </div>
-                        </div>
+                        </details>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

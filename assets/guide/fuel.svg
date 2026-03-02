@@ -1,0 +1,8 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 180'>
+  <rect width='320' height='180' fill='#fff'/>
+  <path d='M40 150 A120 120 0 0 1 280 150' fill='none' stroke='#a50034' stroke-width='14'/>
+  <line x1='160' y1='150' x2='238' y2='92' stroke='#111' stroke-width='6' stroke-linecap='round'/>
+  <text x='160' y='172' font-size='16' text-anchor='middle' font-family='Arial'>Combustible</text>
+  <text x='55' y='146' font-size='12' font-family='Arial'>E</text>
+  <text x='262' y='146' font-size='12' font-family='Arial'>F</text>
+</svg>

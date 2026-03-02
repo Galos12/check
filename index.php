@@ -72,6 +72,9 @@ $selected_date_display = $_GET['date'] ?? '';
 
 try {
     $db = get_db_connection();
+    $db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS fuel_level TINYINT UNSIGNED NULL');
+    $db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS oil_level TINYINT UNSIGNED NULL');
+    $db->query("ALTER TABLE checklists ADD COLUMN IF NOT EXISTS refrigerant_level ENUM('Low','Mid','Full') NULL");
     $technicians_result = $db->query('SELECT name FROM technicians ORDER BY name');
     if ($technicians_result === false) {
         throw new RuntimeException($db->error);
@@ -176,6 +179,9 @@ if (empty($weekly_tools)) {
 }
 
 $show_checklist = $selected_technician !== '' && $selected_van !== '';
+$existing_fuel_level = $existing_checklist ? (int) ($existing_checklist['fuel_level'] ?? 0) : 50;
+$existing_oil_level = $existing_checklist ? (int) ($existing_checklist['oil_level'] ?? 0) : 50;
+$existing_refrigerant_level = $existing_checklist['refrigerant_level'] ?? 'Mid';
 $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assigned_parts, $existing_part_names))) : [];
 ?>
 <!DOCTYPE html>
@@ -184,15 +190,9 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Lista de Verificación HVAC</title>
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossorigin="anonymous"
-    >
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-light lg-theme">
+<body class="lg-theme">
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
@@ -245,6 +245,49 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
                     <div class="alert alert-info mt-3 mb-0">Checklist diario ya guardado para esta fecha. Puedes reabrirlo y volver a guardar para actualizarlo.</div>
                 <?php endif; ?>
 
+
+                <section class="van-check-section">
+                    <div class="section-header">
+                        <button class="btn btn-outline-secondary" type="button" id="open-van-guide">¿Cómo revisar la van?</button>
+                        <h2 class="h5 mb-0">Inspección rápida de van</h2>
+                    </div>
+                    <div class="van-gauges-grid">
+                        <div class="gauge-card">
+                            <h3>Combustible</h3>
+                            <div class="quarter-gauge" data-gauge="fuel">
+                                <svg viewBox="0 0 220 130" class="gauge-svg">
+                                    <path d="M20 110 A90 90 0 0 1 200 110" class="gauge-arc"></path>
+                                    <line x1="110" y1="110" x2="170" y2="60" class="gauge-needle" id="fuel-needle"></line>
+                                    <circle cx="110" cy="110" r="6" class="gauge-center"></circle>
+                                </svg>
+                                <input type="range" min="0" max="100" value="<?php echo $existing_fuel_level; ?>" id="fuel-slider" name="fuel_level">
+                                <div class="gauge-value"><span id="fuel-value"><?php echo $existing_fuel_level; ?></span>%</div>
+                            </div>
+                        </div>
+                        <div class="gauge-card">
+                            <h3>Aceite</h3>
+                            <div class="quarter-gauge" data-gauge="oil">
+                                <svg viewBox="0 0 220 130" class="gauge-svg">
+                                    <path d="M20 110 A90 90 0 0 1 200 110" class="gauge-arc oil"></path>
+                                    <line x1="110" y1="110" x2="170" y2="60" class="gauge-needle" id="oil-needle"></line>
+                                    <circle cx="110" cy="110" r="6" class="gauge-center"></circle>
+                                </svg>
+                                <input type="range" min="0" max="100" value="<?php echo $existing_oil_level; ?>" id="oil-slider" name="oil_level">
+                                <div class="gauge-value"><span id="oil-value"><?php echo $existing_oil_level; ?></span>%</div>
+                            </div>
+                        </div>
+                        <div class="gauge-card">
+                            <h3>Refrigerante</h3>
+                            <label for="refrigerant_level" class="form-label">Nivel</label>
+                            <select id="refrigerant_level" name="refrigerant_level" class="form-select">
+                                <option value="Low" <?php echo $existing_refrigerant_level === 'Low' ? 'selected' : ''; ?>>Bajo</option>
+                                <option value="Mid" <?php echo $existing_refrigerant_level === 'Mid' ? 'selected' : ''; ?>>Medio</option>
+                                <option value="Full" <?php echo $existing_refrigerant_level === 'Full' ? 'selected' : ''; ?>>Lleno</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
                 <hr class="my-4">
 
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
@@ -256,13 +299,13 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
                         <button class="btn btn-sm btn-outline-primary" type="button" id="add-full-tool-list-btn" data-weekly-tools='<?php echo json_encode($weekly_tools, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>'>
                             Agregar lista semanal
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#add-item-panel" aria-expanded="false" aria-controls="add-item-panel">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" id="toggle-add-item-panel">
                             Agregar extra
                         </button>
                     </div>
                 </div>
 
-                <div class="collapse mb-3" id="add-item-panel">
+                <div class="mb-3 hidden" id="add-item-panel">
                     <div class="card card-body bg-light border">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-6">
@@ -399,8 +442,21 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
     </div>
 </div>
 
+<div id="van-guide-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="van-guide-title">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="van-guide-title">Cómo revisar la van</h2>
+            <button type="button" class="btn btn-outline-secondary" id="close-van-guide">Cerrar</button>
+        </div>
+        <div class="guide-grid">
+            <figure><img src="assets/guide/fuel.svg" alt="Guía combustible"><figcaption>1) Enciende contacto y ajusta el indicador según tablero.</figcaption></figure>
+            <figure><img src="assets/guide/oil.svg" alt="Guía aceite"><figcaption>2) Verifica varilla/indicador y marca el nivel real.</figcaption></figure>
+            <figure><img src="assets/guide/refrigerant.svg" alt="Guía refrigerante"><figcaption>3) Selecciona Bajo, Medio o Lleno según lectura.</figcaption></figure>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script src="script.js"></script>
 </body>
 </html>

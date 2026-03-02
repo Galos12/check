@@ -245,3 +245,50 @@ if (window.jQuery) {
         toggleTables();
     });
 }
+
+
+const toggleAddPanelBtn = document.getElementById('toggle-add-item-panel');
+const addItemPanel = document.getElementById('add-item-panel');
+
+if (toggleAddPanelBtn && addItemPanel) {
+    toggleAddPanelBtn.addEventListener('click', () => {
+        addItemPanel.classList.toggle('hidden');
+    });
+}
+
+const applyGaugeNeedle = (value, needleEl, valueEl) => {
+    if (!needleEl) return;
+    const angle = -90 + (Math.max(0, Math.min(100, Number(value))) * 1.8);
+    needleEl.style.transform = `rotate(${angle}deg)`;
+    needleEl.style.transformOrigin = '110px 110px';
+    if (valueEl) valueEl.textContent = String(value);
+};
+
+const fuelSlider = document.getElementById('fuel-slider');
+const oilSlider = document.getElementById('oil-slider');
+const fuelNeedle = document.getElementById('fuel-needle');
+const oilNeedle = document.getElementById('oil-needle');
+const fuelValue = document.getElementById('fuel-value');
+const oilValue = document.getElementById('oil-value');
+
+if (fuelSlider) {
+    applyGaugeNeedle(fuelSlider.value, fuelNeedle, fuelValue);
+    fuelSlider.addEventListener('input', () => applyGaugeNeedle(fuelSlider.value, fuelNeedle, fuelValue));
+}
+if (oilSlider) {
+    applyGaugeNeedle(oilSlider.value, oilNeedle, oilValue);
+    oilSlider.addEventListener('input', () => applyGaugeNeedle(oilSlider.value, oilNeedle, oilValue));
+}
+
+const openGuide = document.getElementById('open-van-guide');
+const closeGuide = document.getElementById('close-van-guide');
+const guideModal = document.getElementById('van-guide-modal');
+if (openGuide && closeGuide && guideModal) {
+    openGuide.addEventListener('click', () => guideModal.classList.remove('hidden'));
+    closeGuide.addEventListener('click', () => guideModal.classList.add('hidden'));
+    guideModal.addEventListener('click', (event) => {
+        if (event.target === guideModal) {
+            guideModal.classList.add('hidden');
+        }
+    });
+}

@@ -204,15 +204,9 @@ $tools = $tools_result ? $tools_result->fetch_all(MYSQLI_ASSOC) : [];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Administrar opciones de checklist</title>
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossorigin="anonymous"
-    >
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-light lg-theme">
+<body class="lg-theme">
 <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
@@ -247,7 +241,7 @@ $tools = $tools_result ? $tools_result->fetch_all(MYSQLI_ASSOC) : [];
                     <ul class="list-group scroll-list">
                         <?php foreach ($technicians as $technician) : ?>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <button class="btn btn-link p-0 text-decoration-none" type="button" data-bs-toggle="modal" data-bs-target="#assignPartsModal" data-tech-id="<?php echo (int) $technician['id']; ?>" data-tech-name="<?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>">
+                                <button class="btn btn-link p-0 text-decoration-none open-assign-modal" type="button" data-tech-id="<?php echo (int) $technician['id']; ?>" data-tech-name="<?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>">
                                     <?php echo htmlspecialchars($technician['name'], ENT_QUOTES); ?>
                                 </button>
                                 <form method="post">
@@ -370,13 +364,13 @@ $tools = $tools_result ? $tools_result->fetch_all(MYSQLI_ASSOC) : [];
     </div>
 </div>
 
-<div class="modal fade" id="assignPartsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal-overlay hidden" id="assignPartsModal" aria-hidden="true">
+    <div class="modal-content">
         <div class="modal-content">
             <form method="post">
                 <div class="modal-header">
                     <h5 class="modal-title">Asignar repuestos a <span id="assignTechName"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn btn-outline-secondary" id="closeAssignModal">Cerrar</button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="action" value="assign_parts">
@@ -414,7 +408,7 @@ $tools = $tools_result ? $tools_result->fetch_all(MYSQLI_ASSOC) : [];
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-outline-secondary" type="button" id="cancelAssignModal">Cancelar</button>
                     <button class="btn btn-primary" type="submit">Enviar</button>
                 </div>
             </form>
@@ -422,7 +416,6 @@ $tools = $tools_result ? $tools_result->fetch_all(MYSQLI_ASSOC) : [];
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script>
 const assignModal = document.getElementById('assignPartsModal');
 const assignTechName = document.getElementById('assignTechName');
@@ -502,15 +495,17 @@ const renderPartsRows = (term = '') => {
     }).join('');
 };
 
-assignModal.addEventListener('show.bs.modal', (event) => {
-    const button = event.relatedTarget;
-    const techId = button.getAttribute('data-tech-id');
-    assignTechName.textContent = button.getAttribute('data-tech-name');
-    assignTechId.value = techId;
-    assignedDateInput.value = formatToday();
-    renderHistory(techId);
-    updateCheckedParts(techId, assignedDateInput.value);
-    renderPartsRows(partsSearchInput.value);
+document.querySelectorAll('.open-assign-modal').forEach((button) => {
+    button.addEventListener('click', () => {
+        const techId = button.getAttribute('data-tech-id');
+        assignTechName.textContent = button.getAttribute('data-tech-name');
+        assignTechId.value = techId;
+        assignedDateInput.value = formatToday();
+        renderHistory(techId);
+        updateCheckedParts(techId, assignedDateInput.value);
+        renderPartsRows(partsSearchInput.value);
+        assignModal.classList.remove('hidden');
+    });
 });
 
 assignedDateInput.addEventListener('change', () => {
@@ -542,6 +537,20 @@ modalTableBody.addEventListener('click', (event) => {
 
     renderPartsRows(partsSearchInput.value);
 });
+
+const closeAssignModal = document.getElementById('closeAssignModal');
+const cancelAssignModal = document.getElementById('cancelAssignModal');
+[closeAssignModal, cancelAssignModal].forEach((el) => {
+    if (el) {
+        el.addEventListener('click', () => assignModal.classList.add('hidden'));
+    }
+});
+assignModal.addEventListener('click', (event) => {
+    if (event.target === assignModal) {
+        assignModal.classList.add('hidden');
+    }
+});
+
 </script>
 </body>
 </html>
