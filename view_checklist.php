@@ -145,12 +145,17 @@ if ($technician) {
             <div class="card shadow-sm lg-card">
                 <div class="card-body">
                     <h2 class="h5">Información</h2>
+                    <h3 class="h6 info-subtitle">Datos del checklist</h3>
                     <dl class="row mb-0 info-grid">
                         <dt>Técnico</dt><dd><?php echo htmlspecialchars($checklist['technician_name'], ENT_QUOTES); ?></dd>
-                        <dt>Van</dt><dd><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></dd>
                         <dt>Fecha</dt><dd><?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?></dd>
                         <dt>Tipo</dt><dd><?php echo ($checklist['checklist_type'] ?? 'Daily') === 'Weekly' ? 'Semanal' : 'Diario'; ?></dd>
                         <dt>Creado</dt><dd><?php echo htmlspecialchars($created_at->format('d/m/Y H:i'), ENT_QUOTES); ?></dd>
+                    </dl>
+
+                    <h3 class="h6 info-subtitle info-subtitle-van">Información de la van</h3>
+                    <dl class="row mb-0 info-grid">
+                        <dt>Van</dt><dd><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></dd>
                     </dl>
                 </div>
             </div>
@@ -161,11 +166,11 @@ if ($technician) {
                 <div class="card-body">
                     <div class="estado-header">
                         <h2 class="h5 mb-0">Estado actual</h2>
-                        <div class="revision-nav">
-                            <a class="btn btn-sm btn-outline-secondary <?php echo $prev_revision ? '' : 'is-disabled'; ?>" href="<?php echo $prev_revision ? 'view_checklist.php?id=' . $checklist_id . '&rev=' . (int) $prev_revision['id'] : '#'; ?>" aria-disabled="<?php echo $prev_revision ? 'false' : 'true'; ?>">←</a>
-                            <span class="revision-meta"><?php echo htmlspecialchars($revision_badge, ENT_QUOTES); ?> · <?php echo htmlspecialchars($revision_time, ENT_QUOTES); ?></span>
-                            <a class="btn btn-sm btn-outline-secondary <?php echo $next_revision ? '' : 'is-disabled'; ?>" href="<?php echo $next_revision ? 'view_checklist.php?id=' . $checklist_id . '&rev=' . (int) $next_revision['id'] : '#'; ?>" aria-disabled="<?php echo $next_revision ? 'false' : 'true'; ?>">→</a>
-                        </div>
+                    </div>
+                    <div class="revision-bar">
+                        <a class="revision-arrow <?php echo $prev_revision ? '' : 'is-disabled'; ?>" href="<?php echo $prev_revision ? 'view_checklist.php?id=' . $checklist_id . '&rev=' . (int) $prev_revision['id'] : '#'; ?>" aria-disabled="<?php echo $prev_revision ? 'false' : 'true'; ?>" title="Revisión anterior">←</a>
+                        <span class="revision-meta"><?php echo htmlspecialchars($revision_badge, ENT_QUOTES); ?> · <?php echo htmlspecialchars($revision_time, ENT_QUOTES); ?></span>
+                        <a class="revision-arrow <?php echo $next_revision ? '' : 'is-disabled'; ?>" href="<?php echo $next_revision ? 'view_checklist.php?id=' . $checklist_id . '&rev=' . (int) $next_revision['id'] : '#'; ?>" aria-disabled="<?php echo $next_revision ? 'false' : 'true'; ?>" title="Revisión siguiente">→</a>
                     </div>
 
                     <div class="estado-extra">

@@ -51,12 +51,19 @@ main, .page-shell{background:#fff}
 .van-check-section.is-disabled{opacity:.55;filter:grayscale(.2)}
 .van-check-section.is-disabled input,.van-check-section.is-disabled select{pointer-events:none}
 .selection-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#111827;color:#fff;padding:.7rem 1rem;border-radius:10px;z-index:1000;box-shadow:0 8px 20px rgba(0,0,0,.25)}
-.info-grid{display:grid;grid-template-columns:minmax(90px,150px) 1fr;gap:.35rem .75rem}.info-grid dt{font-weight:600}.info-grid dd{margin:0;word-break:break-word}
+.info-grid{display:grid;grid-template-columns:minmax(120px,180px) minmax(0,1fr);gap:.4rem .85rem}.info-grid dt{font-weight:600}.info-grid dd{margin:0;word-break:break-word}
 @media(max-width:900px){.info-grid{grid-template-columns:1fr}}
 
 
-.estado-header{display:flex;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap}
-.revision-nav{display:flex;align-items:center;gap:.5rem}
-.revision-meta{font-size:.9rem;color:#4b5563;font-weight:600}
-.btn.is-disabled{opacity:.4;pointer-events:none}
+.estado-header{display:flex;align-items:center;justify-content:flex-start;margin-bottom:.35rem}
+.revision-bar{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:.5rem;margin-bottom:.85rem;border:1px solid var(--line);border-radius:12px;padding:.35rem .45rem;background:#fafbff}
+.revision-meta{font-size:.92rem;color:#374151;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.revision-arrow{display:inline-grid;place-items:center;height:34px;width:34px;border-radius:999px;text-decoration:none;border:1px solid #d1d5db;background:#fff;color:#111827;font-weight:700;justify-self:start}
+.revision-bar .revision-arrow:last-child{justify-self:end}
+.revision-arrow:hover{background:#f3f4f6}
+.revision-arrow.is-disabled{opacity:.35;pointer-events:none}
 .estado-extra{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem}
+.info-subtitle{font-size:.95rem;color:#374151;margin:.4rem 0 .45rem 0;font-weight:700}
+.info-subtitle-van{margin-top:.95rem;padding-top:.75rem;border-top:1px solid #eceff4}
+
+@media(max-width:700px){.revision-bar{grid-template-columns:36px 1fr 36px}.revision-meta{font-size:.82rem}.info-grid{grid-template-columns:1fr}}
