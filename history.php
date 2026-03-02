@@ -83,15 +83,22 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
 </head>
 <body class="lg-theme">
 <div class="container py-5">
+    <header class="lg-topbar mb-4">
+        <div class="lg-brand">
+            <span class="lg-dot">LG</span>
+            <span class="lg-title">HVAC Service Hub</span>
+        </div>
+        <nav class="lg-nav">
+            <a href="index.php">Checklist</a>
+            <a href="parts.php">Repuestos</a>
+            <a href="history.php">Historial</a>
+            <a href="manage_options.php">Administración</a>
+        </nav>
+    </header>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h1 class="display-6 fw-bold">Historial de checklists</h1>
-            <p class="text-muted mb-0">Revisa cargas anteriores y detecta modificaciones.</p>
-        </div>
-        <div class="d-flex gap-2 mt-3 mt-md-0">
-            <a class="btn btn-outline-secondary" href="parts.php">Repuestos</a>
-            <a class="btn btn-outline-secondary" href="manage_options.php">Administrar opciones</a>
-            <a class="btn btn-lg-primary" href="index.php">Crear checklist</a>
+            <p class="text-muted">Revisa cargas anteriores y detecta modificaciones.</p>
         </div>
     </div>
 
@@ -109,7 +116,7 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
     <div class="card shadow-sm lg-card">
         <div class="card-body">
             <?php if (empty($checklists)) : ?>
-                <p class="text-muted mb-0">Aún no hay checklists guardados.</p>
+                <p class="text-muted">Aún no hay checklists guardados.</p>
             <?php else : ?>
                 <?php $render = function (array $items) { ?>
                     <div class="table-responsive">

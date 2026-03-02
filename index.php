@@ -282,12 +282,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h1 class="display-6 fw-bold">Lista de Verificación de Servicio HVAC</h1>
-            <p class="text-muted mb-0">Registra herramientas y repuestos que los técnicos llevan en cada salida.</p>
-        </div>
-        <div class="d-flex gap-2 mt-3 mt-md-0">
-            <a class="btn btn-outline-secondary" href="parts.php">Repuestos</a>
-            <a class="btn btn-outline-secondary" href="manage_options.php">Administrar opciones</a>
-            <a class="btn btn-outline-primary" href="history.php">Ver listas anteriores</a>
+            <p class="text-muted">Registra herramientas y repuestos que los técnicos llevan en cada salida.</p>
         </div>
     </div>
 

@@ -196,11 +196,7 @@ try {
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="display-6 fw-bold">Repuestos</h1>
-            <p class="text-muted mb-0">Carga inventario desde Excel y busca por nombre.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="manage_options.php">Administrar opciones</a>
-            <a class="btn btn-outline-primary" href="index.php">Checklist</a>
+            <p class="text-muted">Carga inventario desde Excel y busca por nombre.</p>
         </div>
     </div>
 

@@ -208,15 +208,22 @@ $tools = $tools_result ? $tools_result->fetch_all(MYSQLI_ASSOC) : [];
 </head>
 <body class="lg-theme">
 <div class="container py-5">
+    <header class="lg-topbar mb-4">
+        <div class="lg-brand">
+            <span class="lg-dot">LG</span>
+            <span class="lg-title">HVAC Service Hub</span>
+        </div>
+        <nav class="lg-nav">
+            <a href="index.php">Checklist</a>
+            <a href="parts.php">Repuestos</a>
+            <a href="history.php">Historial</a>
+            <a href="manage_options.php">Administración</a>
+        </nav>
+    </header>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h1 class="display-6 fw-bold">Administrar opciones del checklist</h1>
-            <p class="text-muted mb-0">Actualiza técnicos, vans, repuestos y herramientas disponibles.</p>
-        </div>
-        <div class="d-flex gap-2 mt-3 mt-md-0">
-            <a class="btn btn-outline-secondary" href="parts.php">Repuestos</a>
-            <a class="btn btn-outline-secondary" href="index.php">Volver al checklist</a>
-            <a class="btn btn-outline-primary" href="history.php">Ver historial</a>
+            <p class="text-muted">Actualiza técnicos, vans, repuestos y herramientas disponibles.</p>
         </div>
     </div>
 

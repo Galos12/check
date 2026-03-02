@@ -88,9 +88,20 @@ if ($technician) {
 </head>
 <body class="lg-theme">
 <div class="container py-5">
+    <header class="lg-topbar mb-4">
+        <div class="lg-brand">
+            <span class="lg-dot">LG</span>
+            <span class="lg-title">HVAC Service Hub</span>
+        </div>
+        <nav class="lg-nav">
+            <a href="index.php">Checklist</a>
+            <a href="parts.php">Repuestos</a>
+            <a href="history.php">Historial</a>
+            <a href="manage_options.php">Administración</a>
+        </nav>
+    </header>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div><h1 class="display-6 fw-bold">Detalle del checklist</h1><p class="text-muted mb-0">Registro del <?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?>.</p></div>
-        <div class="d-flex gap-2 mt-3 mt-md-0"><a class="btn btn-outline-secondary" href="history.php">Volver</a><a class="btn btn-lg-primary" href="index.php?technician=<?php echo urlencode($checklist['technician_name']); ?>&van=<?php echo urlencode($checklist['van_name']); ?>&date=<?php echo urlencode($checklist_date->format('d/m/Y')); ?>">Reabrir checklist</a></div>
+        <div><h1 class="display-6 fw-bold">Detalle del checklist</h1><p class="text-muted">Registro del <?php echo htmlspecialchars($checklist_date->format('d/m/Y'), ENT_QUOTES); ?>.</p></div>
     </div>
 
     <div class="row g-4">
@@ -128,7 +139,7 @@ if ($technician) {
         <div class="card-body">
             <h2 class="h5">Historial de modificaciones</h2>
             <?php if (empty($revisions)) : ?>
-                <p class="text-muted mb-0">Sin revisiones guardadas.</p>
+                <p class="text-muted">Sin revisiones guardadas.</p>
             <?php else : ?>
                 <div class="history-groups">
                     <?php foreach ($revisions as $revision) : $rid = (int) $revision['id']; $saved = new DateTime($revision['saved_at']); ?>
