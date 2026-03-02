@@ -1,6 +1,8 @@
 <?php
 require_once 'config.php';
 
+$current_page = 'index';
+
 $fallback_daily_tools = [
     'Manifold gauge set',
     'Digital multimeter',
@@ -274,10 +276,10 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
             <span class="lg-title">HVAC Service Hub</span>
         </div>
         <nav class="lg-nav">
-            <a href="index.php">Checklist</a>
-            <a href="parts.php">Repuestos</a>
-            <a href="history.php">Historial</a>
-            <a href="manage_options.php">Administración</a>
+            <a class="<?php echo $current_page === 'index' ? 'active' : ''; ?>" href="index.php">Checklist</a>
+            <a class="<?php echo $current_page === 'parts' ? 'active' : ''; ?>" href="parts.php">Repuestos</a>
+            <a class="<?php echo $current_page === 'history' ? 'active' : ''; ?>" href="history.php">Historial</a>
+            <a class="<?php echo $current_page === 'manage_options' ? 'active' : ''; ?>" href="manage_options.php">Administración</a>
         </nav>
     </header>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
@@ -327,7 +329,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
                 <?php endif; ?>
 
 
-                <section class="van-check-section">
+                <section class="van-check-section <?php echo $show_checklist ? "" : "is-disabled"; ?>" id="van-check-section">
                     <div class="section-header">
                         <button class="btn btn-outline-secondary" type="button" id="open-van-guide">¿Cómo revisar la van?</button>
                         <h2 class="h5 mb-0">Inspección rápida de van</h2>
@@ -338,10 +340,10 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
                             <div class="quarter-gauge" data-gauge="fuel">
                                 <svg viewBox="0 0 220 130" class="gauge-svg">
                                     <path d="M20 110 A90 90 0 0 1 200 110" class="gauge-arc"></path>
-                                    <line x1="110" y1="110" x2="170" y2="60" class="gauge-needle" id="fuel-needle"></line>
+                                    <line x1="110" y1="110" x2="200" y2="110" class="gauge-needle" id="fuel-needle"></line>
                                     <circle cx="110" cy="110" r="6" class="gauge-center"></circle>
                                 </svg>
-                                <input type="range" min="0" max="100" value="<?php echo $existing_fuel_level; ?>" id="fuel-slider" name="fuel_level">
+                                <input type="range" min="0" max="100" value="<?php echo $existing_fuel_level; ?>" id="fuel-slider" name="fuel_level" <?php echo $show_checklist ? "" : "disabled"; ?>>
                                 <div class="gauge-value"><span id="fuel-value"><?php echo $existing_fuel_level; ?></span>%</div>
                             </div>
                         </div>
@@ -350,17 +352,17 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
                             <div class="quarter-gauge" data-gauge="oil">
                                 <svg viewBox="0 0 220 130" class="gauge-svg">
                                     <path d="M20 110 A90 90 0 0 1 200 110" class="gauge-arc oil"></path>
-                                    <line x1="110" y1="110" x2="170" y2="60" class="gauge-needle" id="oil-needle"></line>
+                                    <line x1="110" y1="110" x2="200" y2="110" class="gauge-needle" id="oil-needle"></line>
                                     <circle cx="110" cy="110" r="6" class="gauge-center"></circle>
                                 </svg>
-                                <input type="range" min="0" max="100" value="<?php echo $existing_oil_level; ?>" id="oil-slider" name="oil_level">
+                                <input type="range" min="0" max="100" value="<?php echo $existing_oil_level; ?>" id="oil-slider" name="oil_level" <?php echo $show_checklist ? "" : "disabled"; ?>>
                                 <div class="gauge-value"><span id="oil-value"><?php echo $existing_oil_level; ?></span>%</div>
                             </div>
                         </div>
                         <div class="gauge-card">
                             <h3>Refrigerante</h3>
                             <label for="refrigerant_level" class="form-label">Nivel</label>
-                            <select id="refrigerant_level" name="refrigerant_level" class="form-select">
+                            <select id="refrigerant_level" name="refrigerant_level" class="form-select" <?php echo $show_checklist ? "" : "disabled"; ?>>
                                 <option value="Low" <?php echo $existing_refrigerant_level === 'Low' ? 'selected' : ''; ?>>Bajo</option>
                                 <option value="Mid" <?php echo $existing_refrigerant_level === 'Mid' ? 'selected' : ''; ?>>Medio</option>
                                 <option value="Full" <?php echo $existing_refrigerant_level === 'Full' ? 'selected' : ''; ?>>Lleno</option>
@@ -377,10 +379,10 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
                         <small class="text-muted">Marca lo cargado hoy. Los elementos base se mantienen; los extras se pueden agregar o quitar.</small>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-sm btn-outline-primary" type="button" id="add-full-tool-list-btn" data-weekly-tools='<?php echo json_encode($weekly_tools, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>'>
+                        <button class="btn btn-sm btn-outline-primary" type="button" id="add-full-tool-list-btn" <?php echo $show_checklist ? "" : "disabled"; ?> data-weekly-tools='<?php echo json_encode($weekly_tools, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>'>
                             Agregar lista semanal
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" type="button" id="toggle-add-item-panel">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" id="toggle-add-item-panel" <?php echo $show_checklist ? "" : "disabled"; ?>>
                             Agregar extra
                         </button>
                     </div>
@@ -401,7 +403,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
                                 </select>
                             </div>
                             <div class="col-md-2 d-grid">
-                                <button class="btn btn-primary" type="button" id="add-item-btn">Agregar</button>
+                                <button class="btn btn-primary" type="button" id="add-item-btn" <?php echo $show_checklist ? "" : "disabled"; ?>>Agregar</button>
                             </div>
                         </div>
                     </div>
@@ -522,6 +524,8 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
         </div>
     </div>
 </div>
+
+<div id="selection-toast" class="selection-toast hidden">Selecciona técnico y van antes de iniciar el checklist.</div>
 
 <div id="van-guide-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="van-guide-title">
     <div class="modal-content">

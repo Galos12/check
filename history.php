@@ -1,6 +1,8 @@
 <?php
 require_once 'config.php';
 
+$current_page = 'history';
+
 $db = get_db_connection();
 $db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS fuel_level TINYINT UNSIGNED NULL');
 $db->query('ALTER TABLE checklists ADD COLUMN IF NOT EXISTS oil_level TINYINT UNSIGNED NULL');
@@ -90,10 +92,10 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
             <span class="lg-title">HVAC Service Hub</span>
         </div>
         <nav class="lg-nav">
-            <a href="index.php">Checklist</a>
-            <a href="parts.php">Repuestos</a>
-            <a href="history.php">Historial</a>
-            <a href="manage_options.php">Administración</a>
+            <a class="<?php echo $current_page === 'index' ? 'active' : ''; ?>" href="index.php">Checklist</a>
+            <a class="<?php echo $current_page === 'parts' ? 'active' : ''; ?>" href="parts.php">Repuestos</a>
+            <a class="<?php echo $current_page === 'history' ? 'active' : ''; ?>" href="history.php">Historial</a>
+            <a class="<?php echo $current_page === 'manage_options' ? 'active' : ''; ?>" href="manage_options.php">Administración</a>
         </nav>
     </header>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
@@ -119,7 +121,7 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
             <?php if (empty($checklists)) : ?>
                 <p class="text-muted">Aún no hay checklists guardados.</p>
             <?php else : ?>
-                <?php $render = function (array $items) { ?>
+                <?php $render_full = function (array $items) { ?>
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 lg-table">
                             <thead><tr><th>Fecha</th><th>Técnico</th><th>Van</th><th>Comb.</th><th>Aceite</th><th>Ref.</th><th>Creado</th><th>Tipo</th><th>Modificado</th><th>Última edición</th><th></th></tr></thead>
@@ -150,13 +152,35 @@ $has_filters = $filters['technician'] !== '' || $filters['van'] !== '' || $filte
                     </div>
                 <?php }; ?>
 
+                <?php $render_compact = function (array $items) { ?>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 lg-table">
+                            <thead><tr><th>Fecha</th><th>Técnico</th><th>Tipo</th><th>Van</th><th></th></tr></thead>
+                            <tbody>
+                            <?php foreach ($items as $checklist) :
+                                $date = new DateTime($checklist['checklist_date']);
+                                $typeLabel = ($checklist['checklist_type'] ?? 'Daily') === 'Weekly' ? 'Semanal' : 'Diario';
+                            ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($date->format('d/m/Y'), ENT_QUOTES); ?></td>
+                                    <td><?php echo htmlspecialchars($checklist['technician_name'], ENT_QUOTES); ?></td>
+                                    <td><?php echo htmlspecialchars($typeLabel, ENT_QUOTES); ?></td>
+                                    <td><?php echo htmlspecialchars($checklist['van_name'], ENT_QUOTES); ?></td>
+                                    <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="view_checklist.php?id=<?php echo (int) $checklist['id']; ?>">Ver</a></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php }; ?>
+
                 <?php if ($has_filters) : ?>
-                    <?php $render($checklists); ?>
+                    <?php $render_full($checklists); ?>
                 <?php else : ?>
                     <div class="history-groups">
                         <?php foreach ($grouped_checklists as $group_label => $group_items) : $group_id = 'group-' . preg_replace('/\s+/', '-', strtolower($group_label)); ?>
                             <details class="history-group">
-                                <summary><?php echo htmlspecialchars($group_label, ENT_QUOTES); ?></summary><div class="group-body"><?php $render($group_items); ?></div>
+                                <summary><?php echo htmlspecialchars($group_label, ENT_QUOTES); ?></summary><div class="group-body"><?php $render_compact($group_items); ?></div>
                             </details>
                         <?php endforeach; ?>
                     </div>

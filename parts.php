@@ -1,6 +1,8 @@
 <?php
 require_once 'config.php';
 
+$current_page = 'parts';
+
 $message = '';
 $error = '';
 
@@ -188,10 +190,10 @@ try {
             <span class="lg-title">HVAC Service Hub</span>
         </div>
         <nav class="lg-nav">
-            <a href="index.php">Checklist</a>
-            <a href="parts.php">Repuestos</a>
-            <a href="history.php">Historial</a>
-            <a href="manage_options.php">Administración</a>
+            <a class="<?php echo $current_page === 'index' ? 'active' : ''; ?>" href="index.php">Checklist</a>
+            <a class="<?php echo $current_page === 'parts' ? 'active' : ''; ?>" href="parts.php">Repuestos</a>
+            <a class="<?php echo $current_page === 'history' ? 'active' : ''; ?>" href="history.php">Historial</a>
+            <a class="<?php echo $current_page === 'manage_options' ? 'active' : ''; ?>" href="manage_options.php">Administración</a>
         </nav>
     </header>
     <div class="d-flex justify-content-between align-items-center mb-4">

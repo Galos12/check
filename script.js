@@ -279,7 +279,7 @@ if (toggleAddPanelBtn && addItemPanel) {
 
 const applyGaugeNeedle = (value, needleEl, valueEl) => {
     if (!needleEl) return;
-    const angle = -90 + (Math.max(0, Math.min(100, Number(value))) * 1.8);
+    const angle = 180 - (Math.max(0, Math.min(100, Number(value))) * 1.8);
     needleEl.style.transform = `rotate(${angle}deg)`;
     needleEl.style.transformOrigin = '110px 110px';
     if (valueEl) valueEl.textContent = String(value);
@@ -313,3 +313,54 @@ if (openGuide && closeGuide && guideModal) {
         }
     });
 }
+
+
+const selectionToast = document.getElementById('selection-toast');
+const technicianSelect = document.getElementById('technician_name');
+const vanSelect = document.getElementById('van_name');
+const vanSection = document.getElementById('van-check-section');
+
+const hasRequiredSelection = () => technicianSelect?.value && vanSelect?.value;
+
+let toastTimer = null;
+const showSelectionToast = () => {
+    if (!selectionToast) {
+        return;
+    }
+    selectionToast.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => selectionToast.classList.add('hidden'), 5000);
+};
+
+const protectUntilSelected = (event) => {
+    if (hasRequiredSelection()) {
+        return;
+    }
+    event.preventDefault();
+    showSelectionToast();
+};
+
+if (vanSection) {
+    vanSection.addEventListener('click', (event) => {
+        if (!hasRequiredSelection()) {
+            protectUntilSelected(event);
+        }
+    });
+}
+
+[addItemButton, addFullToolListButton, document.getElementById('toggle-add-item-panel')].forEach((el) => {
+    if (el) {
+        el.addEventListener('click', protectUntilSelected);
+    }
+});
+
+[toolsList, partsList].forEach((list) => {
+    if (list) {
+        list.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target && (target.matches('input, label, button') || target.closest('input, label, button'))) {
+                protectUntilSelected(event);
+            }
+        });
+    }
+});
