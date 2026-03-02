@@ -10,6 +10,34 @@ $fallback_daily_tools = [
     'Cordless drill',
     'Service wrenches',
     'PVC cutters',
+    'Screwdriver set',
+    'Pliers set',
+    'Adjustable wrench',
+    'Allen key set',
+    'Wire stripper',
+    'Crimping tool',
+    'Voltage tester',
+    'Insulation tape',
+    'Pipe bender',
+    'Tube cutter',
+    'Ladder',
+    'Toolbox',
+    'Flashlight',
+    'Safety goggles',
+    'Work gloves',
+    'Leak detector',
+    'Nitrogen cylinder',
+    'Recovery machine',
+    'Extension cords',
+    'Duct tape',
+    'Socket set',
+    'Hammer',
+    'Hex bit set',
+    'Clamp meter',
+    'Fin comb',
+    'Coil cleaning sprayer',
+    'R-22 refrigerant',
+    'R-410A refrigerant',
 ];
 
 $fallback_weekly_tools = [
@@ -69,6 +97,51 @@ $existing_part_names = [];
 $selected_technician = $_GET['technician'] ?? '';
 $selected_van = $_GET['van'] ?? '';
 $selected_date_display = $_GET['date'] ?? '';
+
+
+function tool_emoji(string $tool_name): string
+{
+    $name = strtolower($tool_name);
+    $map = [
+        'screwdriver' => '🪛',
+        'wrench' => '🔧',
+        'pliers' => '🗜️',
+        'drill' => '🛠️',
+        'ladder' => '🪜',
+        'toolbox' => '🧰',
+        'flashlight' => '🔦',
+        'gloves' => '🧤',
+        'goggle' => '🥽',
+        'vacuum' => '🌀',
+        'thermometer' => '🌡️',
+        'meter' => '📟',
+        'scale' => '⚖️',
+        'pump' => '⛽',
+        'tube' => '🧪',
+        'pipe' => '🧵',
+        'cutter' => '✂️',
+        'tape' => '🩹',
+        'refrigerant' => '🧯',
+        'nitrogen' => '🗜️',
+        'recovery' => '♻️',
+        'leak' => '💧',
+        'clamp' => '🧲',
+        'socket' => '🔩',
+        'hammer' => '🔨',
+        'comb' => '🪮',
+        'sprayer' => '🧴',
+        'hex' => '🔩',
+        'key' => '🗝️',
+    ];
+
+    foreach ($map as $keyword => $emoji) {
+        if (str_contains($name, $keyword)) {
+            return $emoji;
+        }
+    }
+
+    return '🧰';
+}
 
 try {
     $db = get_db_connection();
@@ -138,7 +211,7 @@ try {
         $date = DateTime::createFromFormat('d/m/Y', $selected_date_display);
         if ($date) {
             $search_date = $date->format('Y-m-d');
-            $existing_stmt = $db->prepare('SELECT id, notes FROM checklists WHERE technician_name = ? AND van_name = ? AND checklist_date = ? AND checklist_type = "Daily" ORDER BY created_at DESC LIMIT 1');
+            $existing_stmt = $db->prepare('SELECT id, notes, fuel_level, oil_level, refrigerant_level FROM checklists WHERE technician_name = ? AND van_name = ? AND checklist_date = ? AND checklist_type = "Daily" ORDER BY created_at DESC LIMIT 1');
             $existing_stmt->bind_param('sss', $selected_technician, $selected_van, $search_date);
             $existing_stmt->execute();
             $existing_result = $existing_stmt->get_result();
@@ -194,6 +267,18 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
 </head>
 <body class="lg-theme">
 <div class="container py-5">
+    <header class="lg-topbar mb-4">
+        <div class="lg-brand">
+            <span class="lg-dot">LG</span>
+            <span class="lg-title">HVAC Service Hub</span>
+        </div>
+        <nav class="lg-nav">
+            <a href="index.php">Checklist</a>
+            <a href="parts.php">Repuestos</a>
+            <a href="history.php">Historial</a>
+            <a href="manage_options.php">Administración</a>
+        </nav>
+    </header>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
             <h1 class="display-6 fw-bold">Lista de Verificación de Servicio HVAC</h1>
@@ -355,7 +440,7 @@ $parts_to_show = $show_checklist ? array_values(array_unique(array_merge($assign
                                                         </td>
                                                         <td>
                                                             <label class="fw-semibold" for="tool-<?php echo $index; ?>">
-                                                                <?php echo htmlspecialchars($tool['name'], ENT_QUOTES); ?>
+                                                                <span class="tool-emoji"><?php echo htmlspecialchars(tool_emoji($tool['name']), ENT_QUOTES); ?></span> <?php echo htmlspecialchars($tool['name'], ENT_QUOTES); ?>
                                                             </label>
                                                             <input type="hidden" name="items[<?php echo $index; ?>][name]" value="<?php echo htmlspecialchars($tool['name'], ENT_QUOTES); ?>">
                                                             <input type="hidden" name="items[<?php echo $index; ?>][type]" value="Tool">

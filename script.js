@@ -14,6 +14,27 @@ const weeklyTools = weeklyToolsData ? JSON.parse(weeklyToolsData) : [];
 
 const normalizeValue = (value) => value.trim().toLowerCase();
 
+
+const toolEmoji = (name = '') => {
+    const value = name.toLowerCase();
+    const map = [
+        ['screwdriver', '🪛'], ['wrench', '🔧'], ['pliers', '🗜️'], ['drill', '🛠️'],
+        ['ladder', '🪜'], ['toolbox', '🧰'], ['flashlight', '🔦'], ['gloves', '🧤'],
+        ['goggle', '🥽'], ['vacuum', '🌀'], ['thermometer', '🌡️'], ['meter', '📟'],
+        ['scale', '⚖️'], ['pump', '⛽'], ['cutter', '✂️'], ['tape', '🩹'],
+        ['refrigerant', '🧯'], ['recovery', '♻️'], ['hammer', '🔨'], ['socket', '🔩'],
+    ];
+
+    for (const [key, emoji] of map) {
+        if (value.includes(key)) {
+            return emoji;
+        }
+    }
+
+    return '🧰';
+};
+
+
 const existingToolNames = () => {
     const labels = toolsList.querySelectorAll('label');
     return new Set(Array.from(labels).map((label) => normalizeValue(label.textContent)));
@@ -46,7 +67,7 @@ const createItemCard = ({ name, type, has_counter: hasCounter, removable = true,
     const label = document.createElement('label');
     label.className = 'fw-semibold';
     label.setAttribute('for', `item-${index}`);
-    label.textContent = name;
+    label.textContent = type === 'Tool' ? `${toolEmoji(name)} ${name}` : name;
 
     const removeButton = document.createElement('button');
     removeButton.className = 'btn btn-sm btn-link text-danger remove-item-btn';

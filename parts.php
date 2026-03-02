@@ -181,6 +181,18 @@ try {
 </head>
 <body class="lg-theme">
 <div class="container py-5">
+    <header class="lg-topbar mb-4">
+        <div class="lg-brand">
+            <span class="lg-dot">LG</span>
+            <span class="lg-title">HVAC Service Hub</span>
+        </div>
+        <nav class="lg-nav">
+            <a href="index.php">Checklist</a>
+            <a href="parts.php">Repuestos</a>
+            <a href="history.php">Historial</a>
+            <a href="manage_options.php">Administración</a>
+        </nav>
+    </header>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="display-6 fw-bold">Repuestos</h1>
@@ -216,9 +228,9 @@ try {
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h2 class="h5 mb-3">Agregar repuesto manualmente</h2>
-            <form method="post" class="row g-3 align-items-end">
+            <form method="post" class="row g-3 align-items-end parts-manual-form">
                 <input type="hidden" name="action" value="add_manual_part">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label class="form-label" for="manual_part_name">Nombre del repuesto</label>
                     <input class="form-control" id="manual_part_name" name="manual_part_name" required>
                 </div>
@@ -230,8 +242,8 @@ try {
                     <label class="form-label" for="manual_part_stock">Stock</label>
                     <input class="form-control" type="number" min="0" id="manual_part_stock" name="manual_part_stock" value="0" required>
                 </div>
-                <div class="col-md-1 d-grid">
-                    <button class="btn btn-outline-primary" type="submit">Añadir</button>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-outline-primary" type="submit">Agregar</button>
                 </div>
             </form>
         </div>
