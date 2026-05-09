@@ -3,32 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BRVLG HVAC Daily Truck Checklist</title>
+    <title>BRVLG HVAC Technician Checklist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="header">
-      <h1>BRVLG Systems — HVAC Daily Truck Checklist</h1>
-      <p>Live sync enabled: every change is saved to MySQL through PHP immediately.</p>
-      <div id="sync-status" aria-live="polite">Connecting…</div>
+    <header class="hero">
+      <div class="hero-inner">
+        <p class="badge">BRVLG SYSTEMS • HVAC FIELD SUPPORT</p>
+        <h1>Truck Readiness Checklist</h1>
+        <p class="lead">Simple, clear, and always synced. Every check, uncheck, add, or delete is saved immediately.</p>
+        <div id="sync-status" class="sync status-warn" aria-live="polite">Connecting…</div>
+      </div>
     </header>
 
     <main class="container">
+      <section class="card tips">
+        <h2>Before You Start</h2>
+        <ol>
+          <li><strong>Step 1:</strong> Select checklist type below.</li>
+          <li><strong>Step 2:</strong> Read each row and mark items in the truck.</li>
+          <li><strong>Step 3:</strong> If internet drops, wait for “Synced” before leaving.</li>
+        </ol>
+      </section>
+
       <section class="card">
-        <h2>Today's Tools & Parts</h2>
-        <p class="muted">Checklist starts empty by design. Items will be added in a future update.</p>
-        <ul id="checklist" class="checklist" aria-live="polite"></ul>
+        <h2 id="checklist-title">Choose Daily or Weekly Checklist</h2>
+        <p class="muted" id="checklist-subtitle">Pick one checklist to load the recommended BRVLG HVAC items.</p>
+        <div class="choice-row" role="group" aria-label="Checklist type">
+          <button class="choice-btn" data-type="daily">Daily Checklist (Essential Large Tools)</button>
+          <button class="choice-btn" data-type="weekly">Weekly Checklist (Full Inventory)</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Tool / Part</th>
+                <th>Category</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="checklist"></tbody>
+          </table>
+        </div>
       </section>
     </main>
 
     <template id="item-template">
-      <li class="item" data-id="">
-        <label>
-          <input type="checkbox" class="item-check" />
-          <span class="item-name"></span>
-        </label>
-        <button class="delete-btn" type="button">Delete</button>
-      </li>
+      <tr data-id="">
+        <td><input type="checkbox" class="item-check" /></td>
+        <td class="item-name"></td>
+        <td class="item-category"></td>
+        <td><button class="delete-btn" type="button">Delete</button></td>
+      </tr>
     </template>
 
     <script src="script.js"></script>

@@ -16,24 +16,28 @@ require __DIR__ . '/db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
+$listType = isset($_GET['type']) && in_array($_GET['type'], ['daily', 'weekly'], true) ? $_GET['type'] : 'daily';
 $body = json_decode(file_get_contents('php://input') ?: '{}', true) ?? [];
 
 if ($method === 'GET') {
-    $stmt = $pdo->query('SELECT id, name, checked FROM checklist_items ORDER BY id DESC');
+    $stmt = $pdo->prepare('SELECT id, list_type, name, category, checked FROM checklist_items WHERE list_type = :list_type ORDER BY id DESC');
+    $stmt->execute(['list_type' => $listType]);
     echo json_encode(['items' => $stmt->fetchAll()]);
     exit;
 }
 
 if ($method === 'POST') {
     $name = trim((string) ($body['name'] ?? ''));
+    $category = trim((string) ($body['category'] ?? 'General'));
+    $requestType = in_array(($body['list_type'] ?? ''), ['daily', 'weekly'], true) ? $body['list_type'] : $listType;
     if ($name === '') {
         http_response_code(422);
         echo json_encode(['error' => 'Name is required']);
         exit;
     }
-    $stmt = $pdo->prepare('INSERT INTO checklist_items (name, checked) VALUES (:name, 0)');
-    $stmt->execute(['name' => $name]);
-    echo json_encode(['id' => (int) $pdo->lastInsertId(), 'name' => $name, 'checked' => 0]);
+    $stmt = $pdo->prepare('INSERT INTO checklist_items (list_type, name, category, checked) VALUES (:list_type, :name, :category, 0)');
+    $stmt->execute(['list_type' => $requestType, 'name' => $name, 'category' => $category]);
+    echo json_encode(['id' => (int) $pdo->lastInsertId(), 'list_type' => $requestType, 'name' => $name, 'category' => $category, 'checked' => 0]);
     exit;
 }
 

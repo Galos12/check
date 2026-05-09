@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS checklist_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  list_type ENUM('daily','weekly') NOT NULL DEFAULT 'daily',
   name VARCHAR(140) NOT NULL,
+  category VARCHAR(80) NOT NULL DEFAULT 'General',
   checked TINYINT(1) NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
