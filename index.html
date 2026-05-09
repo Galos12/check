@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BRVLG HVAC Daily Truck Checklist</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <h1>BRVLG Systems — HVAC Daily Truck Checklist</h1>
+      <p>Live sync enabled: every change is saved to MySQL through PHP immediately.</p>
+      <div id="sync-status" aria-live="polite">Connecting…</div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <h2>Today's Tools & Parts</h2>
+        <p class="muted">Checklist starts empty by design. Items will be added in a future update.</p>
+        <ul id="checklist" class="checklist" aria-live="polite"></ul>
+      </section>
+    </main>
+
+    <template id="item-template">
+      <li class="item" data-id="">
+        <label>
+          <input type="checkbox" class="item-check" />
+          <span class="item-name"></span>
+        </label>
+        <button class="delete-btn" type="button">Delete</button>
+      </li>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>
