@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A polished, high-performance landing page with rich interactivity and accessibility-first design."
+    />
+    <title>Nebula Studio — Premium Web Experience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header glass">
+      <div class="container nav-wrap">
+        <div class="brand">
+          <span class="brand-dot"></span>
+          <strong>Nebula Studio</strong>
+        </div>
+        <nav aria-label="Main navigation" class="main-nav" id="main-nav">
+          <a href="#features">Features</a>
+          <a href="#showcase">Showcase</a>
+          <a href="#planner">Planner</a>
+          <a href="#contact">Contact</a>
+        </nav>
+        <div class="nav-actions">
+          <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+          <button class="icon-btn menu-btn" id="menu-btn" aria-expanded="false" aria-controls="main-nav">☰</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero container">
+        <div class="hero-copy">
+          <p class="eyebrow">Built for modern teams</p>
+          <h1>Design-rich, conversion-ready websites crafted for impact.</h1>
+          <p>
+            Professional-level visual language, high accessibility standards, and robust interactions packed into one scalable page.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#planner">Start Planning</a>
+            <a class="btn btn-secondary" href="#showcase">View Demo</a>
+          </div>
+          <ul class="trust-row" aria-label="Key benefits">
+            <li>⚡ Fast loading</li>
+            <li>♿ Accessible</li>
+            <li>📱 Fully responsive</li>
+          </ul>
+        </div>
+        <div class="hero-panel glass" aria-live="polite">
+          <h2>Project Estimator</h2>
+          <p class="muted">Adjust inputs to preview a tailored timeline and cost range.</p>
+          <form id="estimator-form">
+            <label>
+              Project type
+              <select id="project-type" name="projectType">
+                <option value="landing">Landing Page</option>
+                <option value="business">Business Site</option>
+                <option value="store">E-commerce Store</option>
+              </select>
+            </label>
+            <label>
+              Number of sections
+              <input id="sections" name="sections" type="range" min="4" max="20" value="8" />
+            </label>
+            <label>
+              Include CMS?
+              <input id="cms" name="cms" type="checkbox" />
+            </label>
+          </form>
+          <div class="estimate-output" id="estimate-output">
+            <p><strong>Estimated range:</strong> <span id="price-range">$3,200–$4,800</span></p>
+            <p><strong>Estimated delivery:</strong> <span id="timeline">2–3 weeks</span></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="container section">
+        <div class="section-head">
+          <p class="eyebrow">Core capabilities</p>
+          <h2>Everything needed for a premium web experience.</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="card glass"><h3>Elegant Visual System</h3><p>Layered gradients, balanced spacing, and precise typography create a polished brand feel.</p></article>
+          <article class="card glass"><h3>Smart Interactions</h3><p>Micro-animations and meaningful feedback improve usability without adding complexity.</p></article>
+          <article class="card glass"><h3>Reliable Foundation</h3><p>Semantic HTML, reusable CSS architecture, and modular JavaScript make updates easier.</p></article>
+        </div>
+      </section>
+
+      <section id="showcase" class="container section">
+        <div class="section-head">
+          <p class="eyebrow">Visual examples</p>
+          <h2>Interactive component showcase</h2>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Showcase Tabs">
+          <button class="tab is-active" role="tab" aria-selected="true" data-target="tab-ui">UI</button>
+          <button class="tab" role="tab" aria-selected="false" data-target="tab-data">Data</button>
+          <button class="tab" role="tab" aria-selected="false" data-target="tab-motion">Motion</button>
+        </div>
+        <div class="tab-panels glass">
+          <div class="tab-panel is-active" id="tab-ui" role="tabpanel">
+            <p>Clean interfaces with consistent hierarchy and high-contrast readability.</p>
+          </div>
+          <div class="tab-panel" id="tab-data" role="tabpanel">
+            <p>Insightful information blocks and lightweight analytics hooks for product growth.</p>
+          </div>
+          <div class="tab-panel" id="tab-motion" role="tabpanel">
+            <p>Subtle transitions that guide attention while honoring reduced-motion preferences.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="planner" class="container section">
+        <div class="section-head">
+          <p class="eyebrow">Plan your next build</p>
+          <h2>Quick planning board</h2>
+        </div>
+        <form id="task-form" class="task-form glass">
+          <label>
+            Add planning task
+            <input id="task-input" type="text" placeholder="Define homepage conversion goal" maxlength="120" required />
+          </label>
+          <button class="btn btn-primary" type="submit">Add Task</button>
+        </form>
+        <ul id="task-list" class="task-list" aria-live="polite"></ul>
+      </section>
+    </main>
+
+    <footer id="contact" class="site-footer">
+      <div class="container footer-wrap">
+        <p>Need this adapted to your brand system? This page is built to be extended quickly and safely.</p>
+        <a class="btn btn-secondary" href="mailto:hello@example.com">Contact Team</a>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
